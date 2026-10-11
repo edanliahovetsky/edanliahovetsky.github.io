@@ -17,7 +17,7 @@ const require = createRequire(
 const { chromium } = require("playwright");
 
 export const EDITOR_URL = process.env.BLINE_URL ?? "http://127.0.0.1:5199/";
-export const FPS = 30;
+export const FPS = 50; // one simulation sample (20 ms) per frame, so the robot moves evenly
 const FRAME_MS = 1000 / FPS;
 
 export const ease = {
@@ -58,6 +58,19 @@ export class Director {
     });
     const page = await context.newPage();
     await page.clock.install({ time: new Date("2026-09-26T12:00:00") });
+    // Playwright's fake clock runs requestAnimationFrame on a fixed 16 ms grid, so each captured frame would advance
+    // the editor's simulation by 32 or 48 ms. The editor snaps the robot to 20 ms samples, so that grid made it step
+    // 2, 1, 2, 2, 1 samples per frame (visible judder). Fire rAF once per captured frame instead. A loop that keeps
+    // re-requesting with the same callback gets its timestamps offset by half a sample, so accumulated sim time never
+    // lands just below a sample boundary and snaps one sample back.
+    await page.addInitScript((P) => {
+      const seen = new WeakSet();
+      window.requestAnimationFrame = (cb) => setTimeout(() => {
+        const now = performance.now();
+        if (seen.has(cb)) cb(now + 10); else { seen.add(cb); cb(now); }
+      }, P - (performance.now() % P) || P);
+      window.cancelAnimationFrame = (id) => clearTimeout(id);
+    }, FRAME_MS);
     await page.goto(EDITOR_URL);
     await page.clock.pauseAt(new Date("2026-09-26T12:00:02"));
     const director = new Director(page, outDir, { scale });

@@ -19,6 +19,9 @@ const translation = (x, y) => ({ type: "translation", x_meters: x, y_meters: y, 
 const rotation = (t, headingDeg) => ({ type: "rotation", t_ratio: t, rotation_radians: deg(headingDeg), profiled_rotation: true });
 const event = (t, key) => ({ type: "event_trigger", t_ratio: t, lib_key: key });
 
+/** The Simulate take starts from this single start point and sketches the rest with the Curve tool. */
+export const startPoint = waypoint(3.0, 7.35, 0);
+
 /** The hero path, placed point by point in the "build" take. Order = placement order. */
 export const heroPoints = [
   [3.55, 7.35, "1"],

@@ -1,22 +1,8 @@
 {
- "play": {
-  "take": "play",
-  "first": 17,
-  "frames": 134,
-  "span": [
-   0,
-   1
-  ],
-  "panels": {}
- },
  "generate": {
   "take": "generate",
-  "first": 0,
-  "frames": 123,
-  "span": [
-   0.04,
-   0.96
-  ],
+  "fps": 50,
+  "frames": 492,
   "panels": {
    "constraints": [
     1586,
@@ -28,12 +14,8 @@
  },
  "organize": {
   "take": "organize",
-  "first": 0,
-  "frames": 184,
-  "span": [
-   0.03,
-   0.97
-  ],
+  "fps": 50,
+  "frames": 425,
   "panels": {
    "navigator": [
     0,
@@ -45,19 +27,9 @@
  },
  "learn": {
   "take": "learn",
-  "first": 71,
-  "frames": 234,
-  "span": [
-   0.02,
-   0.97
-  ],
+  "fps": 50,
+  "frames": 650,
   "panels": {
-   "lessons": [
-    748,
-    18,
-    424,
-    1044
-   ],
    "coach": [
     58,
     60,
@@ -65,5 +37,11 @@
     232
    ]
   }
+ },
+ "simulate": {
+  "take": "simulate",
+  "fps": 50,
+  "frames": 599,
+  "panels": {}
  }
 }

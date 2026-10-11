@@ -44,7 +44,7 @@ export class Timeline {
  * scene takes to catch up with the scrollbar, so a trackpad stop glides to a halt instead of snapping.
  * onNear fires once when the scene is about two screens away (start loading media then).
  */
-export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, onEntry, scrub = 0.3 }) {
+export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, onEntry, onExit, scrub = 0.3 }) {
   let t = 0;
   const draw = () => render(t);
   window.addEventListener("resize", () => { onResize && onResize(); draw(); });
@@ -71,6 +71,11 @@ export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, o
     },
     onUpdate: () => { t = proxy.t; draw(); },
   });
+  // Exit: 0 → 1 over the first 40% of a screen of scroll after the pin releases.
+  if (onExit) {
+    const pinEnd = () => tween.scrollTrigger.end;
+    ST.create({ start: pinEnd, end: () => pinEnd() + window.innerHeight * 0.4, onUpdate: (st) => onExit(st.progress), onRefresh: (st) => onExit(st.progress) });
+  }
   // After any re-measure (load, fonts, resize), jump straight to where the scrollbar is: a reload can land mid-scene
   // and no scroll event follows, so the scrub would otherwise sit at the first frame.
   ST.addEventListener("refresh", () => {
