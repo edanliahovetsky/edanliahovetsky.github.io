@@ -6,11 +6,16 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 S, OUT = sys.argv[1], sys.argv[2]
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 from grade import grade
-F0, END = 27, int(round((18.1 - 4.5) * 30))  # ends just before 2638 climbs the bump for the last time
+F0, END = 27, int(round((25.9 - 4.5) * 30))  # the whole autonomous period: the timer reads 0:20 at F0, 0:00 at END
 X0, Y0, W, H = 440, 0, 1480, 700
 ann = {int(k): np.array(v["corners"], float) for k, v in json.load(open(os.path.join(HERE, "corners.json"))).items() if v}
 ks = sorted(ann)
 cx = np.array([ann[k][:, 0].mean() for k in ks]); top = np.array([ann[k][:, 1].min() for k in ks])
+# After the hand-placed corners end (0:05), 2638 sits by the red alliance wall behind a referee: its centre and bumper
+# top read off gridded frames every half second (frame: (x, top)).
+TAIL = {513: (1772, 466), 528: (1790, 478), 543: (1808, 488), 558: (1810, 490), 573: (1812, 492), 588: (1813, 493),
+        603: (1814, 494), 618: (1815, 494), 633: (1815, 494), 648: (1815, 494)}
+ks = ks + sorted(TAIL); cx = np.concatenate([cx, [TAIL[k][0] for k in sorted(TAIL)]]); top = np.concatenate([top, [TAIL[k][1] for k in sorted(TAIL)]])
 idx = np.arange(F0, END)
 X = np.interp(idx, ks, cx); Y = np.interp(idx, ks, top)
 def gs(v, s):
