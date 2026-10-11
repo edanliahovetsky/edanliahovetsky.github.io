@@ -34,7 +34,7 @@ STEPS = {
     "simulate": {"take": "simulate", "panels": {}},
     "generate": {"take": "generate", "panels": {"constraints": [1586, 104, 330, 400]}},
     "organize": {"take": "organize", "panels": {"navigator": [0, 48, 560, 680]}},
-    "learn": {"take": "learn", "panels": {"coach": [58, 60, 316, 232]}},
+    "learn": {"take": "learn", "panels": {"coach": [57, 59, 318, 252]}},
 }
 
 

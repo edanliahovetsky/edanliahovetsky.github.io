@@ -13,7 +13,7 @@ const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").match
 
 // ================================================================== the pinned editor sequence
 const TL = new Timeline([["simulate", 1], ["generate", 1], ["organize", 1], ["learn", 1]]);
-const UNIT_VH = 80; // each step gets an equal stretch of scroll, about 80% of a screen
+const UNIT_VH = 130; // each step gets an equal stretch of scroll, about 1.3 screens, so no step is easy to scroll past
 const TILT = 0.6; // the film's camera angles, softened
 
 // ================================================================== editor clips (real UI, 30 fps video)
@@ -74,12 +74,13 @@ class Screen {
    * Frames the region "cover"-style: the region fills the element whatever its shape (16:9 on desktop, taller on
    * portrait phones), cropping the sides rather than letterboxing, and cam.zoom zooms in from there.
    */
-  draw(video, take, f, cam, region = [0, 0, 1920, 1080], cursor = true) {
+  draw(video, take, f, cam, region = [0, 0, 1920, 1080], cursor = true, bounds = null) {
     if (!video || !this.W) return;
     const [rx, ry, rw, rh] = region, z = cam.zoom || 1;
     const b0 = this.W / rw, s = Math.max(this.W / rw, this.H / rh) * z; // base scale (view laid out at width W), shown scale
     const vw = this.W / s, vh = this.H / s;
-    const cx = clamp(cam.x ?? rx + rw / 2, rx + vw / 2, rx + rw - vw / 2), cy = clamp(cam.y ?? ry + rh / 2, ry + vh / 2, ry + rh - vh / 2);
+    let cx = clamp(cam.x ?? rx + rw / 2, rx + vw / 2, rx + rw - vw / 2), cy = clamp(cam.y ?? ry + rh / 2, ry + vh / 2, ry + rh - vh / 2);
+    if (bounds) { const [bx, by, bw, bh] = bounds; cx = vw < bw ? clamp(cx, bx + vw / 2, bx + bw - vw / 2) : bx + bw / 2; cy = vh < bh ? clamp(cy, by + vh / 2, by + bh - vh / 2) : by + bh / 2; }
     const sx0 = cx - vw / 2, sy0 = cy - vh / 2;
     if (video !== this.shown) { this.view.replaceChildren(video); this.shown = video; }
     const key = [cx | 0, cy | 0, s.toFixed(4), this.W, this.H];
@@ -135,12 +136,15 @@ function render(step, f) {
     // Simulate. — the whole field while the route is sketched; then the camera follows the robot as it drives it,
     // easing back out as it finishes.
     const r = T.probe(f) || { x: 950, y: 560 };
-    const follow = smooth(m("play"), m("play") + sec(0.6), f) * (1 - smooth(m("end") - sec(0.4), m("end") + sec(0.4), f));
-    const cam = { x: lerp(950, r.x, follow * 0.8), y: lerp(560, r.y, follow * 0.8), zoom: lerp(1.02, 1.45, follow) };
-    Object.assign(scr, keyframes(p, [[0, { rx: 10, rz: -2, s: 0.94 }], [1, { rx: 14, ry: 10, rz: -2, s: 0.9 }]]));
+    const follow = smooth(m("play"), m("play") + sec(1.3), f) * (1 - smooth(m("end") - sec(0.5), m("end") + sec(0.5), f));
+    // Portrait shows a tall slice of the 16:9 frame: start on the left, where the route begins.
+    const x0 = portrait() ? 650 : 960;
+    const cam = { x: lerp(x0, r.x, follow * 0.8), y: lerp(540, r.y, follow * 0.8), zoom: lerp(1, 1.3, follow) };
+    const FIELD = [58, 110, 1815, 911], region = [0, 0, 1920, 1080].map((v, i) => lerp(v, FIELD[i], follow));
+    Object.assign(scr, keyframes(p, [[0, { rx: 10, ry: 0, rz: -2, s: 0.94 }], [1, { rx: 14, ry: 10, rz: -2, s: 0.9 }]]));
     sizeScreen(false);
     if (portrait()) scr.ty = topOf(window.innerHeight, screen.el, scr.s);
-    screen.draw(V.main, T, f, cam);
+    screen.draw(V.main, T, f, cam, undefined, true, region);
     word = ["Simulate.", "Sketch a route. Watch the robot drive it.", 1, "left"];
   } else if (step === "generate") {
     // Generate. — the field, with the Constraints panel lifted out beside it at full size; the run time before and
@@ -149,7 +153,8 @@ function render(step, f) {
     setPanelRegion(reg);
     const L = sideBySide("right", 0.84, 0.95);
     Object.assign(scr, keyframes(p, [[0, { rx: 14, ry: 22, rz: -2, s: 0.8, dim: 0.25 }], [1, { rx: 10, ry: 14, rz: -1, s: 0.84, dim: 0.28 }]]), L.screen);
-    screen.draw(V.main, T, f, { x: 790, y: 580, zoom: 1.22 }); // the field only; the panel is the only copy of Constraints
+    scr.s *= L.fitK || 1;
+    screen.draw(V.main, T, f, { x: 790, y: 563, zoom: 1.32 }); // the field only; the panel is the only copy of Constraints
     pnl = { a: lift, ...keyframes(p, [[0, { rx: 4, ry: -14, s: 0.9 }], [1, { rx: 2, ry: -10, s: 0.95 }]]), ...L.panel };
     pnl.ty += (1 - lift) * 8;
     panel.draw(V.constraints, T, f, { zoom: 1 }, reg, true);
@@ -161,6 +166,7 @@ function render(step, f) {
     setPanelRegion(reg);
     const L = sideBySide("left", 0.84, 0.97);
     Object.assign(scr, keyframes(p, [[0, { rx: 12, ry: -20, rz: 1, s: 0.8, dim: 0.22 }], [1, { rx: 9, ry: -14, rz: 0, s: 0.84, dim: 0.25 }]]), L.screen);
+    scr.s *= L.fitK || 1;
     screen.draw(V.main, T, f, { x: 1244, y: 560, zoom: 1.42 }); // the field only; the navigator is the lifted panel
     pnl = { a: lift, ...keyframes(p, [[0, { rx: 3, ry: 14, s: 0.92 }], [1, { rx: 2, ry: 10, s: 0.97 }]]), ...L.panel };
     pnl.ty += (1 - lift) * 8;
@@ -174,12 +180,13 @@ function render(step, f) {
     setPanelRegion(reg);
     const L = sideBySide("right", 0.84, 0.96, 1.6);
     Object.assign(scr, keyframes(p, [[0, { rx: 12, ry: 16, rz: -1, s: 0.82, dim: 0.15 }], [1, { rx: 8, ry: 12, rz: 0, s: 0.86, dim: 0.12 }]]), L.screen);
-    const after = portrait() ? learnPortraitCam() : { x: 1125, y: 600, zoom: 1.25 };
-    screen.draw(V.main, T, f, { x: lerp(960, after.x, into), y: lerp(540, after.y, into), zoom: lerp(1.1, after.zoom, into) });
+    scr.s *= L.fitK || 1;
+    const after = portrait() ? learnPortraitCam() : { x: 1140, y: 560, zoom: 1.27 };
+    screen.draw(V.main, T, f, { x: lerp(960, after.x, into), y: lerp(540, after.y, into), zoom: lerp(1.4, after.zoom, into) });
     pnl = { a: into, ...keyframes(p, [[0, { rx: 4, ry: -14, s: 0.94 }], [1, { rx: 2, ry: -10, s: 0.98 }]]), ...L.panel };
-    pnl.ty += (1 - into) * 6;
+    pnl.ty += (1 - into) * 6 - (portrait() ? 0 : 10);
     panel.draw(V.coach, T, f, { zoom: 1 }, reg, true);
-    word = ["Learn.", "13 interactive lessons teach it inside the editor.", 1, "left"];
+    word = ["Learn.", "13 interactive lessons teach it inside the editor.", 1, portrait() ? "left" : "right"];
     tryLink = true;
   }
   // Entrance (before the pin): rise from below, tilted back, and fade up; the step bar follows.
@@ -248,10 +255,12 @@ function sideBySide(panelSide, screenScale, panelScale, screenMinAspect = 0) {
   sizePanelPortrait(0);
   const pw = panel.el.offsetWidth;
   const m = Math.max(24, W * 0.035), dir = panelSide === "right" ? 1 : -1;
-  const gap = clamp(W * 0.03, 24, 64), pair = sw * screenScale + gap + pw * panelScale, half = Math.min(pair, W - 2 * m) / 2;
+  const gap = clamp(W * 0.03, 24, 64), fitK = clamp((W - 2 * m - gap - pw * panelScale) / (sw * screenScale), 0.5, 1);
+  screenScale *= fitK;
+  const pair = sw * screenScale + gap + pw * panelScale, half = Math.min(pair, W - 2 * m) / 2;
   const pc = half - (pw * panelScale) / 2; // panel center, from the stage center, toward its side
   const sc = half - (sw * screenScale) / 2; // screen center, toward the other side
-  return { screen: { tx: (-dir * Math.max(0, sc) / W) * 100, ty: 0 }, panel: { tx: ((dir * pc) / W) * 100, ty: 0 } };
+  return { screen: { tx: (-dir * Math.max(0, sc) / W) * 100, ty: 0 }, panel: { tx: ((dir * pc) / W) * 100, ty: 0 }, fitK };
 }
 /**
  * Portrait: the panel takes the full width it can within maxH. Very tall panels (the lesson list) are shown no
@@ -313,7 +322,13 @@ function setStep(name) {
 // are kept in lockstep with it. Changing step fades the stage out briefly and the new step plays from its start.
 const FADE_S = 0.22;
 let scrollT = 0, cur = "simulate", fade = 1, waited = 0, raf = 0, last = 0;
-const wanted = () => BEATS[clamp(Math.floor((scrollT / TL.total) * BEATS.length), 0, BEATS.length - 1)];
+/** The step the scroll position asks for, with a little hysteresis so a few pixels' wobble at a boundary doesn't
+ * restart a step. */
+function wanted() {
+  const x = (scrollT / TL.total) * BEATS.length, i = BEATS.indexOf(cur);
+  if (x > i - 0.12 && x < i + 1.12) return cur;
+  return BEATS[clamp(Math.floor(x), 0, BEATS.length - 1)];
+}
 const endTime = (step) => (clipsInfo[step].frames - 1) / clipsInfo[step].fps;
 function setClips(step, time, play) {
   for (const el of all(stepVideos(step))) {
@@ -339,7 +354,8 @@ function tick(now) {
     const v = stepVideos(cur), main = v.main, end = endTime(cur);
     // The first step waits until the scene has actually reached the top of the window, so it plays in front of you.
     const arrived = cur !== BEATS[0] || entry > 0.98;
-    if (entry < 0.5) { if (main.currentTime > 0 || !main.paused) setClips(cur, 0, false); }
+    if (entry < 0.15) { if (main.currentTime > 0 || !main.paused) setClips(cur, 0, false); }
+    else if (!arrived) { if (!main.paused) setClips(cur, null, false); }
     else if (arrived) {
       waited += dt;
       const loaded = all(v).every((el) => el.readyState >= 3) || waited > 2;

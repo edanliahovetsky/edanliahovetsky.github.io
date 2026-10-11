@@ -14,6 +14,10 @@ export const win = (p, edge = 0.15, edgeOut = edge) => Math.min(smooth(0, edge, 
 export function keyframes(p, keys) {
   const filled = []; let last = {};
   for (const [at, v] of keys) { last = { ...last, ...v }; filled.push([at, last]); }
+  // A key missing from the early keyframes takes its first defined value there, so it never jumps when it appears.
+  const first = {};
+  for (const [, v] of keys) for (const k in v) if (!(k in first)) first[k] = v[k];
+  for (const f of filled) f[1] = { ...first, ...f[1] };
   if (p <= filled[0][0]) return { ...filled[0][1] };
   for (let i = 1; i < filled.length; i++) {
     const [a, va] = filled[i - 1], [b, vb] = filled[i];
