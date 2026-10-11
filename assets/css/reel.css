@@ -196,7 +196,14 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 /* ---------- Chapter headers ---------- */
 
 .chapter { position: relative; }
-.chapter-head { padding-top: clamp(96px, 14vw, 180px); padding-bottom: clamp(40px, 6vw, 72px); }
+/* Every chapter opens with a full-width rule and its number and name, and alternate chapters sit on a slightly
+   lighter ground (redefining --bg so their fades and gradients blend into it), so each reads as its own block. */
+.tone { --bg: #0a0e16; background: var(--bg); }
+.chapter-mark { position: relative; z-index: 2; border-top: 1px solid var(--line-2); background: var(--bg); }
+.chapter-mark .wrap { display: flex; align-items: baseline; gap: 14px; padding-top: 20px; padding-bottom: 20px; }
+.chapter-mark .num { font: 600 13px var(--mono); letter-spacing: 0.06em; color: var(--accent); }
+.chapter-mark .name { font: 600 15px var(--display); letter-spacing: 0.01em; color: var(--ink); }
+.chapter-head { padding-top: clamp(56px, 8vw, 110px); padding-bottom: clamp(40px, 6vw, 72px); }
 .chapter-head .label { margin-bottom: 18px; display: block; }
 .chapter-head h2 { font-size: clamp(48px, 8.4vw, 120px); }
 .chapter-head .lede { margin-top: 24px; }
@@ -657,7 +664,8 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 
 /* ---------- Résumé ---------- */
 
-.resume { padding: clamp(96px, 14vw, 180px) 0 clamp(64px, 8vw, 96px); border-top: 1px solid var(--line); }
+.resume { padding: 0 0 clamp(64px, 8vw, 96px); }
+.resume > .wrap { padding-top: clamp(56px, 8vw, 110px); }
 .resume-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: clamp(40px, 6vw, 64px); }
 .resume-head h2 { font-size: clamp(48px, 8vw, 104px); margin-top: 14px; }
 .resume-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 80px); }
@@ -723,6 +731,9 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   body { background: #fff; font-size: 10pt; }
   body > *:not(main), main > *:not(#resume), .resume-head .links, .bar { display: none !important; }
   .resume { padding: 0; border: 0; }
+  .tone { --bg: #fff; background: #fff; }
+  .chapter-mark { display: none; }
+  .resume > .wrap { padding-top: 0; }
   .resume-head h2 { font-size: 26pt; }
   .js .reveal { opacity: 1 !important; transform: none !important; }
   .role { break-inside: avoid; padding: 8px 0; }
