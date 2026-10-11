@@ -210,6 +210,15 @@ function render(t) {
     panel.draw(T("learn-" + name), useCoach ? f : listF, { zoom: 1, y: 0 }, reg, true); // y: 0 keeps a cropped list at its top
     word = ["Learn.", "13 interactive lessons, built into the editor", smooth(0, 0.08, p), "left"];
   }
+  // Entrance (before the pin): rise from below, tilted back, and fade up; the step bar follows.
+  const e = easeOut(smooth(0.25, 1, entry));
+  if (e < 1) {
+    scr.s = (scr.s || 1) * lerp(0.86, 1, e);
+    scr.rx = (scr.rx || 0) + (1 - e) * 34;
+    scr.ty = (scr.ty || 0) + (1 - e) * 14;
+    scr.a *= smooth(0.15, 0.7, entry);
+  }
+  stepsEl.style.opacity = smooth(0.7, 1, entry);
   frame3d(screen.el, scr, scr.a);
   frame3d(panel.el, pnl || {}, pnl ? pnl.a : 0);
   setWord(...word);
@@ -306,16 +315,22 @@ function setStep(t) {
   stepShown = name;
   for (const b of steps) b.classList.toggle("is-on", b.dataset.step === name);
 }
-for (const b of steps) {
-  b.addEventListener("click", () => {
-    const [a, z] = TL.span[b.dataset.step];
-    scene.scrollToT(a + (z - a) * 0.4);
-  });
-}
+// Rest points: where each beat has played out but not yet started to fade. Scrolling snaps between these, and the
+// step buttons jump to them.
+const REST = { play: 0.72, generate: 0.8, organize: 0.8, learn: 0.85 };
+const restT = (name) => { const [a, z] = TL.span[name]; return a + (z - a) * REST[name]; };
+for (const b of steps) b.addEventListener("click", () => scene.scrollToT(restT(b.dataset.step)));
 
-const scene = pinScene({
+// Entrance: the editor rises and tilts upright as the scene scrolls into view, instead of arriving as a flat image.
+let entry = 1;
+const stepsEl = $("bl-steps");
+
+let scene = null;
+scene = pinScene({
   el: root, stage: root.querySelector(".scene-stage"), total: TL.total, unitVh: UNIT_VH, scrub: 0.6,
   render: (t) => { if (ready) render(t); },
+  onEntry: (e) => { entry = e; if (scene) scene.draw(); },
+  snap: { points: [0, ...BEATS.map(restT), TL.total], min: 0.5, max: 1.2 },
   onNear: () => loadData.then(() => { loadAround(0); scene.draw(); }),
   onResize: () => { screen.fit(); panel.fit(); },
 });

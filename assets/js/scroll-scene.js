@@ -44,7 +44,7 @@ export class Timeline {
  * scene takes to catch up with the scrollbar, so a trackpad stop glides to a halt instead of snapping.
  * onNear fires once when the scene is about two screens away (start loading media then).
  */
-export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, scrub = 0.3 }) {
+export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, onEntry, snap, scrub = 0.3 }) {
   let t = 0;
   const draw = () => render(t);
   window.addEventListener("resize", () => { onResize && onResize(); draw(); });
@@ -59,6 +59,8 @@ export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, s
   if (document.readyState === "complete") remeasure(); else window.addEventListener("load", remeasure, { once: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
   ST.create({ trigger: el, start: "top 250%", once: true, onEnter: () => onNear && onNear() });
+  // Entry: 0 → 1 as the scene scrolls up from the bottom of the window to the pin, for an entrance animation.
+  if (onEntry) ST.create({ trigger: el, start: "top bottom", end: "top top", onUpdate: (st) => onEntry(st.progress), onRefresh: (st) => onEntry(st.progress) });
   const proxy = { t: 0 };
   const tween = gsap.to(proxy, {
     t: total, ease: "none",
@@ -66,6 +68,12 @@ export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, s
       trigger: el, start: "top top", pin: stage, anticipatePin: 1, invalidateOnRefresh: true,
       end: () => "+=" + Math.round(total * unitVh / 100 * window.innerHeight),
       scrub,
+      // Snap: when scrolling stops, glide on to the nearest rest point in the direction of travel, taking between
+      // snap.min and snap.max seconds however hard the flick was.
+      snap: snap && {
+        snapTo: snap.points.map((v) => v / total), directional: true, inertia: false, delay: 0.08, ease: "power2.inOut",
+        duration: { min: snap.min, max: snap.max },
+      },
     },
     onUpdate: () => { t = proxy.t; draw(); },
   });

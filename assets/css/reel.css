@@ -231,6 +231,8 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 
 /* The pinned editor sequence: real editor frames on tilted "screens" (the launch film's CameraView cards). */
 .bl-stage { background: radial-gradient(120% 90% at 50% 40%, #0b1220 0%, var(--bg) 70%); }
+/* Blend the stage's lighter glow into the page above it, so its top edge is not a visible seam. */
+.bl-stage::before { content: ""; position: absolute; z-index: 1; left: 0; right: 0; top: 0; height: 30svh; background: linear-gradient(180deg, var(--bg), transparent); pointer-events: none; }
 .bl-screen {
   position: absolute; z-index: 2; left: 50%; top: 50%; width: min(1500px, 94vw, calc((100svh - 40px) * 16 / 9)); aspect-ratio: 16 / 9;
   border-radius: 14px; overflow: hidden; background: #0d1117; opacity: 0; visibility: hidden;
