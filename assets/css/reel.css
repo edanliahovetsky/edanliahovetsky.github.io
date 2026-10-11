@@ -337,6 +337,14 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .bl-alhu { margin: 0; }
 .bl-alhu-media { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: #000; }
 .bl-alhu video { display: block; width: 100%; aspect-ratio: 1480 / 700; object-fit: cover; }
+/* Tag on the Championship clip: every robot is driving itself (the match's autonomous period). */
+.bl-auto-tag {
+  position: absolute; left: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px;
+  background: rgba(5, 7, 11, 0.72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  font: 600 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink);
+}
+.bl-auto-tag i { width: 8px; height: 8px; border-radius: 50%; background: #7ee2a8; box-shadow: 0 0 0 0 rgba(126, 226, 168, 0.6); animation: pulse 1.6s infinite; }
+@media (max-width: 760px) { .bl-auto-tag { left: 8px; bottom: 8px; padding: 5px 9px; font-size: 10px; } }
 .bl-alhu figcaption { margin-top: 12px; text-wrap: pretty; color: var(--ink-2); font-size: 15px; }
 
 /* Short landscape screens (phones turned sideways, short windows): smaller captions, the step bar tucked into the top

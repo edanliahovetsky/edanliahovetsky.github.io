@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 S, OUT = sys.argv[1], sys.argv[2]
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 from grade import grade
-F0, END = 27, int(round((21.2 - 4.5) * 30))
+F0, END = 27, int(round((18.1 - 4.5) * 30))  # ends just before 2638 climbs the bump for the last time
 X0, Y0, W, H = 440, 0, 1480, 700
 ann = {int(k): np.array(v["corners"], float) for k, v in json.load(open(os.path.join(HERE, "corners.json"))).items() if v}
 ks = sorted(ann)
