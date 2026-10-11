@@ -634,6 +634,8 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 .band-media { position: absolute; inset: 0; z-index: -1; }
 .band-media video { width: 100%; height: 100%; object-fit: cover; opacity: 0.72; }
+/* Narrow screens crop to a sliver of the wide shot: keep Edan in it, not the keyboard. */
+@media (max-aspect-ratio: 1 / 1) { .band-media video { object-position: 20% 50%; } }
 .band-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, var(--bg) 0%, transparent 30%, transparent 50%, var(--bg) 100%); }
 .band-inner { padding-bottom: clamp(40px, 6vw, 72px); }
 .band h2 { font-size: clamp(64px, 12vw, 180px); margin: 16px 0 18px; }
