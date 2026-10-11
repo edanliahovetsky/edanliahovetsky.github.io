@@ -8,21 +8,44 @@
   var io = "IntersectionObserver" in window;
   var play = function (v) { if (reduceMotion) return; var p = v.play(); if (p && p.catch) p.catch(function () {}); };
 
-  // ---- Lazy video loading: attach sources only when a video gets close ----
+  // ---- Device class: which size of video to send ----
+  // sd: phones, small windows, data-saver, slow connections, or devices reporting little memory.
+  // xl: large high-resolution screens on capable machines (only the BLine editor clips have an xl size).
+  // hd: everything else, including older laptops (1080p H.264 is decoded in hardware there).
+  var conn = navigator.connection || {}, mem = navigator.deviceMemory, cores = navigator.hardwareConcurrency || 4;
+  var small = Math.min(screen.width, innerWidth) < 900 || matchMedia("(max-aspect-ratio: 9 / 10)").matches;
+  var slow = conn.saveData || /(^|-)2g|3g/.test(conn.effectiveType || "") || (mem && mem <= 4);
+  var tier = small || slow ? "sd" : innerWidth >= 1800 && (devicePixelRatio || 1) >= 2 && cores >= 8 && !(mem && mem < 8) ? "xl" : "hd";
+  window.Media = { tier: tier, reduceMotion: reduceMotion };
+
+  // ---- Lazy video loading: attach sources only when a video is about to be seen, and let go of far-away ones ----
+  // A video marked data-sd has a phone-size <name>-sd.mp4 next to it.
+  function srcFor(video, url) { return tier === "sd" && video.hasAttribute("data-sd") ? url.replace(/\.mp4$/, "-sd.mp4") : url; }
   function load(video) {
     if (video.dataset.loaded) return;
-    $$("source[data-src]", video).forEach(function (s) { s.src = s.dataset.src; });
+    $$("source[data-src]", video).forEach(function (s) { s.src = srcFor(video, s.dataset.src); });
     video.load();
     video.dataset.loaded = "1";
   }
+  // Unloading frees the video decoder and its buffered frames (older machines run out of both); the poster stays.
+  function unload(video) {
+    if (!video.dataset.loaded) return;
+    video.pause();
+    $$("source[data-src]", video).forEach(function (s) { s.removeAttribute("src"); });
+    video.load();
+    delete video.dataset.loaded;
+  }
   if (io) {
     var loadIO = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) { load(e.target); loadIO.unobserve(e.target); } });
-    }, { rootMargin: "120% 0px" });
-    $$("video").forEach(function (v) { loadIO.observe(v); });
+      entries.forEach(function (e) { if (e.isIntersecting) load(e.target); });
+    }, { rootMargin: "60% 0px" });
+    var dropIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (!e.isIntersecting) unload(e.target); });
+    }, { rootMargin: "250% 0px" });
+    $$("video").forEach(function (v) { loadIO.observe(v); dropIO.observe(v); });
     // Autoplaying loops play only while visible.
     var playIO = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) play(e.target); else e.target.pause(); });
+      entries.forEach(function (e) { if (e.isIntersecting) { load(e.target); play(e.target); } else e.target.pause(); });
     }, { threshold: 0.2 });
     $$("video[autoplay]").forEach(function (v) { playIO.observe(v); });
   } else {

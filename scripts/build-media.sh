@@ -66,3 +66,7 @@ photo "$SRC/team/rocket-city-trip.jpg"        "$OUT/team-rocket-city-trip.jpg"
 python3 -c 'import sys; from PIL import Image; im = Image.open(sys.argv[1]).convert("RGB"); im.point([round(255 * (i / 255) ** 0.85) for i in range(256)] * 3).save(sys.argv[1], quality=86)' "$OUT/team-rocket-city-trip.jpg"
 
 ls -la "$OUT"
+
+# Phone-size video versions and the WebP photos/posters the page actually loads.
+bash scripts/build-variants.sh
+python3 scripts/build-images.py

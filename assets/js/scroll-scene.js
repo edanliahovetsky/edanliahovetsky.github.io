@@ -62,7 +62,7 @@ export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, o
   const remeasure = () => requestAnimationFrame(() => ST.refresh());
   if (document.readyState === "complete") remeasure(); else window.addEventListener("load", remeasure, { once: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
-  ST.create({ trigger: el, start: "top 250%", once: true, onEnter: () => onNear && onNear() });
+  ST.create({ trigger: el, start: "top 160%", once: true, onEnter: () => onNear && onNear() });
   // Entry: 0 → 1 as the scene scrolls up from the bottom of the window to the pin, for an entrance animation.
   if (onEntry) ST.create({ trigger: el, start: "top bottom", end: "top top", onUpdate: (st) => onEntry(st.progress), onRefresh: (st) => onEntry(st.progress) });
   const proxy = { t: 0 };

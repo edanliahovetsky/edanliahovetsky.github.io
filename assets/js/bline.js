@@ -21,7 +21,7 @@ const TILT = 0.6; // the film's camera angles, softened
 // so they play in lockstep from the main clip's clock. takes.json has each take's cursor path, markers and robot
 // positions (30 fps, 1920x1080 page pixels); the page draws the cursor itself.
 let clipsInfo = null, meta = null;
-const hd = () => Math.min(window.innerWidth, 1800) * Math.min(2, window.devicePixelRatio || 1) > 1400;
+const tier = () => (window.Media && window.Media.tier) || "hd"; // sd phones, hd desktops, xl big high-res screens (reel.js)
 class Take {
   constructor(name) { this.meta = meta[name]; }
   frames() { return this.meta.frames; }
@@ -39,21 +39,55 @@ class Take {
   }
 }
 const takes = {};
-/** A step's videos: main plus its panels, created on first use and loaded when the step is near. */
+/**
+ * A step's videos: main plus its panels, sized for the device. Each carries the URLs of its first- and last-frame
+ * stills (shown while it loads, and in place of it where video can't play). Steps load one at a time, in order.
+ */
 const vids = {};
 function stepVideos(step) {
   if (vids[step]) return vids[step];
-  const v = {}, c = clipsInfo[step];
+  const v = {}, c = clipsInfo[step], t = tier();
   for (const name of ["main", ...Object.keys(c.panels)]) {
     const el = document.createElement("video");
     el.muted = true; el.playsInline = true; el.setAttribute("playsinline", ""); el.setAttribute("muted", "");
     el.disablePictureInPicture = true; el.preload = "auto";
-    el.src = `assets/clips/${step}/${name === "main" ? (hd() ? "main-hd" : "main-sd") : name}.mp4`;
+    const file = name === "main" ? `main-${t}` : t === "sd" ? `${name}-sd` : name;
+    el.src = `assets/clips/${step}/${file}.mp4`;
+    el.dataset.first = `assets/clips/${step}/${name}-first.webp`;
+    el.dataset.last = `assets/clips/${step}/${name}-last.webp`;
     v[name] = el;
   }
   return (vids[step] = v);
 }
 const all = (v) => Object.values(v);
+/** Ready to play through without stalling (or the network has nothing more to give it). */
+const buffered = (el) => el.readyState >= 4 || (el.readyState >= 2 && el.networkState === 1);
+/**
+ * Keeps the step on screen loading first; once it has buffered, starts the next one (nudging it to buffer even on
+ * iPhones, which otherwise only fetch a video when it plays). Steps more than one away are let go, so at most two
+ * steps' videos (four or five decoders) exist at once.
+ */
+const warmed = new Set();
+function loadAround(i) {
+  stepVideos(BEATS[i]);
+  const next = BEATS[i + 1];
+  if (next && all(vids[BEATS[i]]).every(buffered) && !warmed.has(next)) {
+    warmed.add(next);
+    for (const el of all(stepVideos(next))) { const pr = el.play(); pr && pr.then(() => { el.pause(); el.currentTime = 0; }, () => {}); }
+  }
+  for (const [k, step] of BEATS.entries()) if (vids[step] && (k < i - 1 || k > i + 1)) release(step);
+}
+function release(step) {
+  for (const el of all(vids[step])) { el.pause(); el.removeAttribute("src"); el.load(); }
+  delete vids[step]; warmed.delete(step);
+}
+/** Steps whose video couldn't play (iPhone Low Power Mode blocks it, or it never arrived): they show their result. */
+const stuck = new Set();
+/** Which still a screen shows for this video: "last" for a step that can't play, "first" until a frame arrives. */
+function stillFor(video) {
+  if (stuck.has(cur)) return "last";
+  return video.readyState >= 2 ? null : "first";
+}
 
 /**
  * Shows the 1920x1080 page (or a region of it) through a camera {x, y, zoom}, built from plain DOM so scrolling
@@ -65,8 +99,9 @@ const CURSOR_SVG = '<svg viewBox="0 0 13 20" aria-hidden="true"><path d="M0 0v17
 class Screen {
   constructor(el) {
     this.el = el;
-    el.innerHTML = '<div class="bl-view"></div><div class="bl-cursor">' + CURSOR_SVG + '</div><div class="bl-dim"></div>';
+    el.innerHTML = '<div class="bl-view"><img class="bl-still" alt=""></div><div class="bl-cursor">' + CURSOR_SVG + '</div><div class="bl-dim"></div>';
     this.view = el.querySelector(".bl-view"); this.cur = el.querySelector(".bl-cursor"); this.dim = el.querySelector(".bl-dim");
+    this.still = el.querySelector(".bl-still");
     this.shown = null; this.key = "";
   }
   fit() { this.W = this.el.offsetWidth; this.H = this.el.offsetHeight; this.key = ""; }
@@ -76,13 +111,18 @@ class Screen {
    */
   draw(video, take, f, cam, region = [0, 0, 1920, 1080], cursor = true, bounds = null) {
     if (!video || !this.W) return;
+    // A still stands in until the video has a frame to show, or for good where it can't play.
+    const still = stillFor(video);
+    if (still) { const url = video.dataset[still]; if (this.still.dataset.src !== url) { this.still.src = url; this.still.dataset.src = url; } }
+    this.still.style.opacity = still ? 1 : 0;
+    video.style.opacity = still ? 0 : 1;
     const [rx, ry, rw, rh] = region, z = cam.zoom || 1;
     const b0 = this.W / rw, s = Math.max(this.W / rw, this.H / rh) * z; // base scale (view laid out at width W), shown scale
     const vw = this.W / s, vh = this.H / s;
     let cx = clamp(cam.x ?? rx + rw / 2, rx + vw / 2, rx + rw - vw / 2), cy = clamp(cam.y ?? ry + rh / 2, ry + vh / 2, ry + rh - vh / 2);
     if (bounds) { const [bx, by, bw, bh] = bounds; cx = vw < bw ? clamp(cx, bx + vw / 2, bx + bw - vw / 2) : bx + bw / 2; cy = vh < bh ? clamp(cy, by + vh / 2, by + bh - vh / 2) : by + bh / 2; }
     const sx0 = cx - vw / 2, sy0 = cy - vh / 2;
-    if (video !== this.shown) { this.view.replaceChildren(video); this.shown = video; }
+    if (video !== this.shown) { this.view.replaceChildren(this.still, video); this.shown = video; }
     const key = [cx | 0, cy | 0, s.toFixed(4), this.W, this.H];
     if (key.join() !== this.key) {
       this.key = key.join();
@@ -121,15 +161,12 @@ function frame3d(el, v, visible) {
   if (dim) dim.style.opacity = v.dim || 0;
 }
 
-// Clips load per step: the step on screen and the next one.
 const BEATS = ["simulate", "generate", "organize", "learn"];
-function loadAround(i) { for (const k of [i, i + 1]) if (BEATS[k]) stepVideos(BEATS[k]); }
 
 /** Draws step `step` at take frame f (the main clip's current frame). */
 function render(step, f) {
   const c = clipsInfo[step], T = takes[c.take], V = stepVideos(step), n = T.frames(), p = clamp(f / (n - 1));
   const m = (k) => T.marker(k), sec = (x) => x * c.fps;
-  loadAround(BEATS.indexOf(step));
   let word = ["", "", 1, ""], pnl = null, stat = null, tryLink = false;
   const scr = { a: 1 };
   if (step === "simulate") {
@@ -305,7 +342,7 @@ const loadData = Promise.all([fetch("assets/clips/clips.json").then((r) => r.jso
     clipsInfo = c; meta = tk;
     for (const n of Object.keys(meta)) takes[n] = new Take(n);
     // The first frame doubles as the screen's backdrop, so it is never an empty box while the clip loads.
-    screen.el.style.backgroundImage = "url(assets/clips/simulate/poster.jpg)";
+    screen.el.style.backgroundImage = "url(assets/clips/simulate/main-first.webp)";
     ready = true;
   });
 // Step indicator: shows which step is on screen and jumps to a step when clicked.
@@ -333,7 +370,8 @@ const endTime = (step) => (clipsInfo[step].frames - 1) / clipsInfo[step].fps;
 function setClips(step, time, play) {
   for (const el of all(stepVideos(step))) {
     if (time != null && Math.abs(el.currentTime - time) > 0.001) el.currentTime = time;
-    if (play && el.paused) { const pr = el.play(); pr && pr.catch(() => {}); }
+    // A refusal to play (iPhone Low Power Mode, data saver) leaves the step on its last-frame still.
+    if (play && el.paused) { const pr = el.play(); pr && pr.catch((e) => { if (e && e.name === "NotAllowedError") { stuck.add(step); kick(); } }); }
     if (!play && !el.paused) el.pause();
   }
 }
@@ -358,16 +396,20 @@ function tick(now) {
     else if (!arrived) { if (!main.paused) setClips(cur, null, false); }
     else if (arrived) {
       waited += dt;
-      const loaded = all(v).every((el) => el.readyState >= 3) || waited > 2;
-      if (reduceMotion || main.currentTime >= end - 0.01) setClips(cur, end, false);
-      else if (loaded) {
+      if (stuck.has(cur)) { /* holds its last-frame still */ }
+      else if (reduceMotion || main.currentTime >= end - 0.01) setClips(cur, end, false);
+      else {
+        // Play right away: iPhones only fetch a video once it plays, and it simply waits for data if it must.
         if (main.paused) setClips(cur, null, true);
-        for (const el of all(v)) if (el !== main && Math.abs(el.currentTime - main.currentTime) > 0.06) el.currentTime = main.currentTime;
+        if (main.readyState >= 2) for (const el of all(v)) if (el !== main && Math.abs(el.currentTime - main.currentTime) > 0.06) el.currentTime = main.currentTime;
+        if (waited > 8 && main.currentTime < 0.05) stuck.add(cur); // nothing arrived in 8 s: show the result instead
         busy = true;
-      } else busy = true;
+      }
     }
   }
-  render(cur, stepVideos(cur).main.currentTime * clipsInfo[cur].fps);
+  if (!all(stepVideos(cur)).every(buffered)) busy = true; // keep checking, to start the next step's download
+  loadAround(BEATS.indexOf(cur));
+  render(cur, stuck.has(cur) ? clipsInfo[cur].frames - 1 : stepVideos(cur).main.currentTime * clipsInfo[cur].fps);
   if (busy) raf = requestAnimationFrame(tick);
   else last = 0;
 }
