@@ -44,7 +44,7 @@ export class Timeline {
  * scene takes to catch up with the scrollbar, so a trackpad stop glides to a halt instead of snapping.
  * onNear fires once when the scene is about two screens away (start loading media then).
  */
-export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, onEntry, snap, scrub = 0.3 }) {
+export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, onEntry, scrub = 0.3 }) {
   let t = 0;
   const draw = () => render(t);
   window.addEventListener("resize", () => { onResize && onResize(); draw(); });
@@ -68,12 +68,6 @@ export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, o
       trigger: el, start: "top top", pin: stage, anticipatePin: 1, invalidateOnRefresh: true,
       end: () => "+=" + Math.round(total * unitVh / 100 * window.innerHeight),
       scrub,
-      // Snap: when scrolling stops, glide on to the nearest rest point in the direction of travel, taking between
-      // snap.min and snap.max seconds however hard the flick was.
-      snap: snap && {
-        snapTo: snap.points.map((v) => v / total), directional: true, inertia: false, delay: 0.08, ease: "power2.inOut",
-        duration: { min: snap.min, max: snap.max },
-      },
     },
     onUpdate: () => { t = proxy.t; draw(); },
   });
@@ -87,7 +81,7 @@ export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, o
   /** Scrolls the page so the scene shows timeline position t. */
   const scrollToT = (t2) => {
     const st = tween.scrollTrigger;
-    if (st) window.scrollTo({ top: st.start + (t2 / total) * (st.end - st.start), behavior: "smooth" });
+    if (st) window.scrollTo({ top: st.start + (t2 / total) * (st.end - st.start), behavior: "instant" });
   };
   return { draw, scrollToT };
 }

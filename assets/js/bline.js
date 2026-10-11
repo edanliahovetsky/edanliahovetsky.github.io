@@ -1,6 +1,6 @@
 // BLine chapter. Most of it is normal page flow; this file drives:
 //   - the ONE pinned sequence on the page: the real BLine 2027 editor (captured frame by frame by
-//     scripts/capture/takes.mjs), scrubbed by scroll through Simulate, Generate, Organize and Learn, on tilted
+//     scripts/capture/takes.mjs): scrolling picks the step (Simulate, Generate, Organize, Learn) and each plays in time, on tilted
 //     screens with a panel lifted out beside them at full 4K sharpness (the launch film's framing);
 //   - the team montage's labels (from the clip's currentTime);
 //   - the banner wall dropping in once, with the film's bounce, when it scrolls into view;
@@ -13,7 +13,7 @@ const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").match
 
 // ================================================================== the pinned editor sequence
 const TL = new Timeline([["play", 1.3], ["generate", 2.3], ["organize", 2.0], ["learn", 2.4]]);
-const UNIT_VH = 42;
+const UNIT_VH = 40; // the four steps get equal stretches of scroll, about 80% of a screen each
 const TILT = 0.6; // the film's camera angles, softened
 
 // ================================================================== editor takes (real UI frames)
@@ -130,11 +130,13 @@ function setWord(text, sub, a, pos = "") {
   if (wordMain.textContent !== text) wordMain.textContent = text;
   if (wordSub.textContent !== (sub || "")) wordSub.textContent = sub || "";
   if (word.dataset.pos !== pos) word.dataset.pos = pos;
+  a *= fade;
   word.style.opacity = a;
   word.style.translate = `0 ${(1 - a) * 24}px`;
 }
 /** 3D framing of a screen/panel element (the film's CameraView "card"), kept to gentle angles. */
 function frame3d(el, v, visible) {
+  visible *= fade;
   el.style.opacity = visible;
   el.style.visibility = visible > 0.005 ? "visible" : "hidden";
   if (visible <= 0.005) return;
@@ -315,11 +317,47 @@ function setStep(t) {
   stepShown = name;
   for (const b of steps) b.classList.toggle("is-on", b.dataset.step === name);
 }
-// Rest points: where each beat has played out but not yet started to fade. Scrolling snaps between these, and the
-// step buttons jump to them.
-const REST = { play: 0.72, generate: 0.8, organize: 0.8, learn: 0.85 };
-const restT = (name) => { const [a, z] = TL.span[name]; return a + (z - a) * REST[name]; };
-for (const b of steps) b.addEventListener("click", () => scene.scrollToT(restT(b.dataset.step)));
+// Scroll picks the step; time plays it. The scene is pinned for four equal stretches of scroll, one per step. Arriving
+// at a step plays its editor footage at its own pace up to that step's rest point (finished, not yet fading) and holds
+// there, so the motion is the same however fast or slow you scroll. Changing step fades the stage out briefly and
+// the new step plays from its start.
+const REST = { play: 0.72, generate: 0.8, organize: 0.8, learn: 0.85 }; // beat progress where each step holds
+const PLAY_S = { play: 3.2, generate: 3.8, organize: 4.4, learn: 5.2 }; // seconds to play each step up to its rest
+const FADE_S = 0.22;
+let scrollT = 0, cur = "play", p = 0, fade = 1, waited = 0, raf = 0, last = 0;
+const wanted = () => BEATS[clamp(Math.floor((scrollT / TL.total) * BEATS.length), 0, BEATS.length - 1)];
+/** A step can start once most of its frames are decoded (or after a short wait, so a slow network still plays). */
+function beatReady(name) {
+  return BEAT_TAKES[BEATS.indexOf(name)].every((n) => { const tk = takes[n]; return tk && tk.ready.filter(Boolean).length >= tk.count * 0.85; });
+}
+function tick(now) {
+  raf = 0;
+  const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+  last = now;
+  const want = wanted();
+  if (want !== cur) {
+    fade = Math.max(0, fade - dt / FADE_S);
+    if (fade === 0) { cur = want; p = 0; waited = 0; }
+  } else {
+    fade = Math.min(1, fade + dt / FADE_S);
+    // The first step waits until the scene has actually reached the top of the window, so it plays in front of you.
+    const arrived = cur !== "play" || entry > 0.98;
+    if (entry < 0.5) p = 0;
+    else if (arrived) {
+      waited += dt;
+      if (reduceMotion) p = REST[cur];
+      else if (beatReady(cur) || waited > 1.5) p = Math.min(REST[cur], p + (dt / PLAY_S[cur]) * REST[cur]);
+    }
+  }
+  const [a, z] = TL.span[cur];
+  if (ready) render(a + (z - a) * p);
+  if (want !== cur || fade < 1 || (p < REST[cur] && entry >= 0.5)) raf = requestAnimationFrame(tick);
+  else last = 0;
+}
+function kick() { if (!raf) { last = 0; raf = requestAnimationFrame(tick); } }
+for (const b of steps) {
+  b.addEventListener("click", () => scene.scrollToT(((BEATS.indexOf(b.dataset.step) + 0.5) / BEATS.length) * TL.total));
+}
 
 // Entrance: the editor rises and tilts upright as the scene scrolls into view, instead of arriving as a flat image.
 let entry = 1;
@@ -327,14 +365,13 @@ const stepsEl = $("bl-steps");
 
 let scene = null;
 scene = pinScene({
-  el: root, stage: root.querySelector(".scene-stage"), total: TL.total, unitVh: UNIT_VH, scrub: 0.6,
-  render: (t) => { if (ready) render(t); },
-  onEntry: (e) => { entry = e; if (scene) scene.draw(); },
-  snap: { points: [0, ...BEATS.map(restT), TL.total], min: 0.5, max: 1.2 },
-  onNear: () => loadData.then(() => { loadAround(0); scene.draw(); }),
+  el: root, stage: root.querySelector(".scene-stage"), total: TL.total, unitVh: UNIT_VH, scrub: true,
+  render: (t) => { scrollT = t; kick(); },
+  onEntry: (e) => { entry = e; kick(); },
+  onNear: () => loadData.then(() => { loadAround(0); kick(); }),
   onResize: () => { screen.fit(); panel.fit(); },
 });
-loadData.then(() => scene.draw());
+loadData.then(kick);
 
 // ================================================================== team montage labels
 const CUTS = [
