@@ -4,7 +4,7 @@
 //
 // Needs the beta editor served on 127.0.0.1:5199 (see scripts/capture/README.md).
 // Each take writes assets/source/takes/<name>/frames/*.png (3840×2160) + take.json (cursor path, markers).
-// scripts/build-takes.sh turns those frames into the WebP sequences the page scrubs.
+// scripts/build-clips.py turns those frames into the per-step videos the page plays.
 // Choreography follows the launch film's capture/takes.mjs, re-paced for scrolling: building the path is quick,
 // Generate, Organize and Learn get the time.
 import path from "node:path";

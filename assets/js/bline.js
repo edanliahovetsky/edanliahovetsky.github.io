@@ -16,47 +16,14 @@ const TL = new Timeline([["play", 1.3], ["generate", 2.3], ["organize", 2.0], ["
 const UNIT_VH = 40; // the four steps get equal stretches of scroll, about 80% of a screen each
 const TILT = 0.6; // the film's camera angles, softened
 
-// ================================================================== editor takes (real UI frames)
-let manifest = null, meta = null;
-const tier = () => (Math.min(window.innerWidth, 1800) * Math.min(2, window.devicePixelRatio || 1) > 1400 ? "hd" : "sd");
+// ================================================================== editor clips (real UI, 30 fps video)
+// scripts/build-clips.py renders each step as a main clip plus clips of the panels it lifts out, all the same length
+// so they play in lockstep from the main clip's clock. takes.json has each take's cursor path, markers and robot
+// positions (30 fps, 1920x1080 page pixels); the page draws the cursor itself.
+let clipsInfo = null, meta = null;
+const hd = () => Math.min(window.innerWidth, 1800) * Math.min(2, window.devicePixelRatio || 1) > 1400;
 class Take {
-  constructor(name) { this.name = name; this.imgs = []; this.ready = []; }
-  init() {
-    const m = manifest[this.name];
-    this.count = m.count; this.step = m.step; this.first = m.first || 0;
-    this.tier = (m.tiers || ["hd", "sd"]).includes(tier()) ? tier() : "hd";
-    this.meta = meta[this.name.split("-")[0]];
-    return this;
-  }
-  src(i) { return `assets/seq/${this.name}/${this.tier}/${String(i + 1).padStart(4, "0")}.webp`; }
-  request(i, onload) {
-    if (this.imgs[i]) return;
-    const img = new Image();
-    img.alt = "";
-    img.src = this.src(i);
-    this.imgs[i] = img;
-    // Decode off the main thread before the frame is ever drawn (drawing an undecoded image decodes it right
-    // there, mid-scroll, which is what made scrubbing stutter).
-    img.decode().catch(() => {}).then(() => { this.ready[i] = true; onload(); });
-  }
-  preload(onload) {
-    if (this.preloaded) return;
-    this.preloaded = true;
-    for (const s of [8, 4, 2, 1]) for (let i = 0; i < this.count; i += s) this.request(i, onload);
-  }
-  /** The loaded frame at take-frame f (30 fps index), plus the next one and the blend toward it. */
-  at(f) {
-    const x = clamp((f - this.first) / this.step, 0, this.count - 1), i = Math.floor(x), k = x - i;
-    const a = this.near(i), b = k > 0.02 && this.ready[i + 1] && a === this.imgs[i] ? this.imgs[i + 1] : null;
-    return { a, b, k };
-  }
-  near(i) {
-    for (let d = 0; d < this.count; d++) {
-      if (this.ready[i - d]) return this.imgs[i - d];
-      if (this.ready[i + d]) return this.imgs[i + d];
-    }
-    return null;
-  }
+  constructor(name) { this.meta = meta[name]; }
   frames() { return this.meta.frames; }
   marker(name) { return this.meta.markers[name]; }
   cursor(f) {
@@ -71,8 +38,22 @@ class Take {
     return null;
   }
 }
-const TAKES = ["play", "generate", "generate-constraints", "organize", "organize-navigator", "learn", "learn-lessons", "learn-coach"];
 const takes = {};
+/** A step's videos: main plus its panels, created on first use and loaded when the step is near. */
+const vids = {};
+function stepVideos(step) {
+  if (vids[step]) return vids[step];
+  const v = {}, c = clipsInfo[step];
+  for (const name of ["main", ...Object.keys(c.panels)]) {
+    const el = document.createElement("video");
+    el.muted = true; el.playsInline = true; el.setAttribute("playsinline", ""); el.setAttribute("muted", "");
+    el.disablePictureInPicture = true; el.preload = "auto";
+    el.src = `assets/clips/${step}/${name === "main" ? (hd() ? "main-hd" : "main-sd") : name}.mp4`;
+    v[name] = el;
+  }
+  return (vids[step] = v);
+}
+const all = (v) => Object.values(v);
 
 /**
  * Shows the 1920x1080 page (or a region of it) through a camera {x, y, zoom}, built from plain DOM so scrolling
@@ -86,27 +67,21 @@ class Screen {
     this.el = el;
     el.innerHTML = '<div class="bl-view"></div><div class="bl-cursor">' + CURSOR_SVG + '</div><div class="bl-dim"></div>';
     this.view = el.querySelector(".bl-view"); this.cur = el.querySelector(".bl-cursor"); this.dim = el.querySelector(".bl-dim");
-    this.a = this.b = null; this.key = "";
+    this.shown = null; this.key = "";
   }
   fit() { this.W = this.el.offsetWidth; this.H = this.el.offsetHeight; this.key = ""; }
   /**
    * Frames the region "cover"-style: the region fills the element whatever its shape (16:9 on desktop, taller on
    * portrait phones), cropping the sides rather than letterboxing, and cam.zoom zooms in from there.
    */
-  draw(take, f, cam, region = [0, 0, 1920, 1080], cursor = true) {
-    if (!take || !take.count || !this.W) return;
+  draw(video, take, f, cam, region = [0, 0, 1920, 1080], cursor = true) {
+    if (!video || !this.W) return;
     const [rx, ry, rw, rh] = region, z = cam.zoom || 1;
     const b0 = this.W / rw, s = Math.max(this.W / rw, this.H / rh) * z; // base scale (view laid out at width W), shown scale
     const vw = this.W / s, vh = this.H / s;
     const cx = clamp(cam.x ?? rx + rw / 2, rx + vw / 2, rx + rw - vw / 2), cy = clamp(cam.y ?? ry + rh / 2, ry + vh / 2, ry + rh - vh / 2);
     const sx0 = cx - vw / 2, sy0 = cy - vh / 2;
-    const { a, b, k } = take.at(f);
-    if (a !== this.a || b !== this.b) {
-      this.view.replaceChildren(...[a, b].filter(Boolean));
-      this.a = a; this.b = b;
-      if (a) a.style.opacity = 1;
-    }
-    if (b) b.style.opacity = k.toFixed(3);
+    if (video !== this.shown) { this.view.replaceChildren(video); this.shown = video; }
     const key = [cx | 0, cy | 0, s.toFixed(4), this.W, this.H];
     if (key.join() !== this.key) {
       this.key = key.join();
@@ -145,15 +120,12 @@ function frame3d(el, v, visible) {
   if (dim) dim.style.opacity = v.dim || 0;
 }
 
-// Frames load per beat: the beat on screen and the next one (not all ~350 at once).
-const BEAT_TAKES = [["play"], ["generate", "generate-constraints"], ["organize", "organize-navigator"], ["learn", "learn-lessons", "learn-coach"]];
+// Clips load per step: the step on screen and the next one.
 const BEATS = ["play", "generate", "organize", "learn"];
-function loadAround(i) {
-  for (const k of [i, i + 1]) for (const n of BEAT_TAKES[k] || []) takes[n].preload(() => scene.draw());
-}
+function loadAround(i) { for (const k of [i, i + 1]) if (BEATS[k]) stepVideos(BEATS[k]); }
 
 function render(t) {
-  const at = (n) => TL.at(t, n), inb = (n) => TL.in(t, n), T = (n) => takes[n];
+  const at = (n) => TL.at(t, n), inb = (n) => TL.in(t, n), T = (n) => takes[n], V = (n) => stepVideos(n);
   let word = ["", "", 0, ""], pnl = null;
   loadAround(Math.max(0, BEATS.findIndex((b) => inb(b))));
   // The screen is already there as the sequence scrolls into view (no blank stage before the pin starts).
@@ -167,32 +139,32 @@ function render(t) {
     Object.assign(scr, keyframes(p, [[0, { rx: 24, rz: -6, s: 0.88 }], [0.25, { rx: 6, rz: -1, s: 0.96 }], [1, { rx: 14, ry: 10, rz: -2, s: 0.9 }]]));
     sizeScreen(false);
     if (portrait()) scr.ty = topOf(window.innerHeight, screen.el, scr.s);
-    screen.draw(tk, f, cam);
+    screen.draw(V("play").main, tk, f, cam);
     word = ["Simulate.", "Draw a path and watch the robot drive it", win(p, 0.1, 0.15), "left"];
   } else if (inb("generate")) {
     // Generate. — tilted screen, the Constraints panel lifted out beside it at full size.
     const p = at("generate"), tk = T("generate"), f = lerp(0, tk.frames() - 1, clamp((p - 0.04) / 0.92));
-    const reg = manifest.generate.panels.constraints, lift = easeOut(smooth(0.04, 0.2, p));
+    const reg = clipsInfo.generate.panels.constraints, lift = easeOut(smooth(0.04, 0.2, p));
     setPanelRegion(reg);
     const L = sideBySide("right", 0.84, 0.95);
     Object.assign(scr, keyframes(p, [[0, { rx: 14, ry: 22, rz: -2, s: 0.8, dim: 0.25 }], [1, { rx: 10, ry: 14, rz: -1, s: 0.84, dim: 0.28 }]]), L.screen);
     // The background frames just the field; the Constraints panel only appears once, lifted out beside it.
-    screen.draw(tk, f, { x: 790, y: 580, zoom: 1.22 });
+    screen.draw(V("generate").main, tk, f, { x: 790, y: 580, zoom: 1.22 });
     pnl = { a: lift * win(p, 0.04, 0.08), ...keyframes(p, [[0, { rx: 4, ry: -14, s: 0.9 }], [1, { rx: 2, ry: -10, s: 0.95 }]]), ...L.panel };
     pnl.ty += (1 - lift) * 8;
-    panel.draw(T("generate-constraints"), f, { zoom: 1 }, reg, true);
+    panel.draw(V("generate").constraints, tk, f, { zoom: 1 }, reg, true);
     word = ["Generate.", "Every handoff radius and speed limit, solved together", win(p, 0.08, 0.1), "left"];
   } else if (inb("organize")) {
     // Organize. — the Project Navigator's web of groups and paths, lifted out; the field shows the chained paths.
     const p = at("organize"), tk = T("organize"), f = lerp(0, tk.frames() - 1, clamp((p - 0.03) / 0.94));
-    const reg = manifest.organize.panels.navigator, lift = easeOut(smooth(0.03, 0.18, p));
+    const reg = clipsInfo.organize.panels.navigator, lift = easeOut(smooth(0.03, 0.18, p));
     setPanelRegion(reg);
     const L = sideBySide("left", 0.84, 0.97);
     Object.assign(scr, keyframes(p, [[0, { rx: 12, ry: -20, rz: 1, s: 0.8, dim: 0.22 }], [1, { rx: 9, ry: -14, rz: 0, s: 0.84, dim: 0.25 }]]), L.screen);
-    screen.draw(tk, f, { x: 1244, y: 560, zoom: 1.42 }); // the field only; the navigator is the lifted panel
+    screen.draw(V("organize").main, tk, f, { x: 1244, y: 560, zoom: 1.42 }); // the field only; the navigator is the lifted panel
     pnl = { a: lift * win(p, 0.03, 0.08), ...keyframes(p, [[0, { rx: 3, ry: 14, s: 0.92 }], [1, { rx: 2, ry: 10, s: 0.97 }]]), ...L.panel };
     pnl.ty += (1 - lift) * 8;
-    panel.draw(T("organize-navigator"), f, { zoom: 1 }, reg, true);
+    panel.draw(V("organize").navigator, tk, f, { zoom: 1 }, reg, true);
     word = ["Organize.", "Path groups chain paths into full autos", win(p, 0.08, 0.1), "right"];
   } else if (inb("learn") || t >= TL.span.learn[1]) {
     // Learn. — the background is the guided lesson canvas (the robot crossing the "Bend" handoff), framed without
@@ -200,16 +172,16 @@ function render(t) {
     const p = at("learn"), tk = T("learn"), lesson = tk.marker("lesson");
     const f = lerp(lesson + 14, tk.frames() - 1, clamp((p - 0.02) / 0.95));
     const listF = lerp(tk.marker("list") - 4, lesson - 2, clamp((p - 0.02) / 0.3));
-    const useCoach = p > 0.345, name = useCoach ? "coach" : "lessons", reg = manifest.learn.panels[name];
+    const useCoach = p > 0.345, name = useCoach ? "coach" : "lessons", reg = clipsInfo.learn.panels[name];
     const swap = useCoach ? smooth(0.36, 0.43, p) : 1 - smooth(0.28, 0.335, p);
     setPanelRegion(reg);
     const L = sideBySide("right", 0.84, 0.96, 1.6);
     Object.assign(scr, keyframes(p, [[0, { rx: 12, ry: 16, rz: -1, s: 0.82, dim: 0.15 }], [1, { rx: 8, ry: 12, rz: 0, s: 0.86, dim: 0.12 }]]), L.screen);
-    screen.draw(tk, f, portrait() ? learnPortraitCam() : { x: 1125, y: 600, zoom: 1.25 });
+    screen.draw(V("learn").main, tk, f, portrait() ? learnPortraitCam() : { x: 1125, y: 600, zoom: 1.25 });
     // Last beat: the panel and word stay up as the pin releases, so the stage never scrolls away half-empty.
     pnl = { a: swap * smooth(0, 0.03, p), ...keyframes(p, [[0, { rx: 4, ry: -14, s: 0.94 }], [1, { rx: 2, ry: -10, s: 0.98 }]]), ...L.panel };
     pnl.ty += (1 - swap) * 6;
-    panel.draw(T("learn-" + name), useCoach ? f : listF, { zoom: 1, y: 0 }, reg, true); // y: 0 keeps a cropped list at its top
+    panel.draw(V("learn")[name], tk, useCoach ? f : listF, { zoom: 1, y: 0 }, reg, true); // y: 0 keeps a cropped list at its top
     word = ["Learn.", "13 interactive lessons, built into the editor", smooth(0, 0.08, p), "left"];
   }
   // Entrance (before the pin): rise from below, tilted back, and fade up; the step bar follows.
@@ -300,12 +272,12 @@ function setPanelRegion(reg) {
 
 
 let ready = false;
-const loadData = Promise.all([fetch("assets/seq/manifest.json").then((r) => r.json()), fetch("assets/seq/takes.json").then((r) => r.json())])
-  .then(([m, tk]) => {
-    manifest = m; meta = tk;
-    for (const n of TAKES) takes[n] = new Take(n).init();
-    // The first frame doubles as the screen's backdrop, so it is never an empty box while frames download.
-    screen.el.style.backgroundImage = `url(${takes.play.src(0)})`;
+const loadData = Promise.all([fetch("assets/clips/clips.json").then((r) => r.json()), fetch("assets/clips/takes.json").then((r) => r.json())])
+  .then(([c, tk]) => {
+    clipsInfo = c; meta = tk;
+    for (const n of Object.keys(meta)) takes[n] = new Take(n);
+    // The first frame doubles as the screen's backdrop, so it is never an empty box while the clip loads.
+    screen.el.style.backgroundImage = "url(assets/clips/play/poster.jpg)";
     ready = true;
   });
 // Step indicator: shows which beat is on screen and jumps to a beat when clicked.
@@ -317,41 +289,57 @@ function setStep(t) {
   stepShown = name;
   for (const b of steps) b.classList.toggle("is-on", b.dataset.step === name);
 }
-// Scroll picks the step; time plays it. The scene is pinned for four equal stretches of scroll, one per step. Arriving
-// at a step plays its editor footage at its own pace up to that step's rest point (finished, not yet fading) and holds
-// there, so the motion is the same however fast or slow you scroll. Changing step fades the stage out briefly and
-// the new step plays from its start.
-const REST = { play: 0.72, generate: 0.8, organize: 0.8, learn: 0.85 }; // beat progress where each step holds
-const PLAY_S = { play: 3.2, generate: 3.8, organize: 4.4, learn: 5.2 }; // seconds to play each step up to its rest
+// Scroll picks the step; the step's video plays it. The scene is pinned for four equal stretches of scroll, one per
+// step. Arriving at a step plays its clips at real speed (30 fps) up to the step's rest point (finished, not yet
+// fading) and holds there, so the motion is the same however you scroll. The main clip is the clock: its time sets
+// the step's 0..1 progress, which drives the camera, tilt and text, and the panel clips are kept in lockstep with it.
+// Changing step fades the stage out briefly and the new step plays from its start.
+const REST = { play: 0.72, generate: 0.8, organize: 0.8, learn: 0.85 }; // step progress where each step holds
 const FADE_S = 0.22;
 let scrollT = 0, cur = "play", p = 0, fade = 1, waited = 0, raf = 0, last = 0;
 const wanted = () => BEATS[clamp(Math.floor((scrollT / TL.total) * BEATS.length), 0, BEATS.length - 1)];
-/** A step can start once most of its frames are decoded (or after a short wait, so a slow network still plays). */
-function beatReady(name) {
-  return BEAT_TAKES[BEATS.indexOf(name)].every((n) => { const tk = takes[n]; return tk && tk.ready.filter(Boolean).length >= tk.count * 0.85; });
+const clipP = (step, time) => { const c = clipsInfo[step], [a, b] = c.span; return a + (b - a) * clamp((time * 30) / (c.frames - 1)); };
+const restTime = (step) => { const c = clipsInfo[step], [a, b] = c.span; return (clamp((REST[step] - a) / (b - a)) * (c.frames - 1)) / 30; };
+function setClips(step, time, play) {
+  for (const el of all(stepVideos(step))) {
+    if (time != null && Math.abs(el.currentTime - time) > 0.001) el.currentTime = time;
+    if (play && el.paused) { const pr = el.play(); pr && pr.catch(() => {}); }
+    if (!play && !el.paused) el.pause();
+  }
 }
 function tick(now) {
   raf = 0;
+  if (!ready) return;
   const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
   last = now;
   const want = wanted();
+  let busy = false;
   if (want !== cur) {
     fade = Math.max(0, fade - dt / FADE_S);
-    if (fade === 0) { cur = want; p = 0; waited = 0; }
+    busy = true;
+    if (fade === 0) { setClips(cur, null, false); cur = want; waited = 0; setClips(cur, 0, false); }
   } else {
     fade = Math.min(1, fade + dt / FADE_S);
+    if (fade < 1) busy = true;
+    const v = stepVideos(cur), main = v.main, rest = restTime(cur);
     // The first step waits until the scene has actually reached the top of the window, so it plays in front of you.
     const arrived = cur !== "play" || entry > 0.98;
-    if (entry < 0.5) p = 0;
+    if (entry < 0.5) { if (main.currentTime > 0 || !main.paused) setClips(cur, 0, false); }
     else if (arrived) {
       waited += dt;
-      if (reduceMotion) p = REST[cur];
-      else if (beatReady(cur) || waited > 1.5) p = Math.min(REST[cur], p + (dt / PLAY_S[cur]) * REST[cur]);
+      const loaded = all(v).every((el) => el.readyState >= 3) || waited > 2;
+      if (reduceMotion || main.currentTime >= rest - 1 / 60) setClips(cur, rest, false);
+      else if (loaded) {
+        if (main.paused) setClips(cur, null, true);
+        for (const el of all(v)) if (el !== main && Math.abs(el.currentTime - main.currentTime) > 0.08) el.currentTime = main.currentTime;
+        busy = true;
+      } else busy = true;
     }
+    p = clipP(cur, main.currentTime);
   }
   const [a, z] = TL.span[cur];
-  if (ready) render(a + (z - a) * p);
-  if (want !== cur || fade < 1 || (p < REST[cur] && entry >= 0.5)) raf = requestAnimationFrame(tick);
+  render(a + (z - a) * (want !== cur ? clipP(cur, stepVideos(cur).main.currentTime) : p));
+  if (busy) raf = requestAnimationFrame(tick);
   else last = 0;
 }
 function kick() { if (!raf) { last = 0; raf = requestAnimationFrame(tick); } }

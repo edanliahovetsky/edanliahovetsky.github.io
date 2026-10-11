@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the live-action footage for the BLine chapter. These clips autoplay (muted, looping) in normal page flow;
-# only the editor sequence is scroll-scrubbed (see scripts/build-takes.py).
+# the editor sequence plays per-step clips built by scripts/build-clips.py.
 #
 #  assets/media/bline-open.mp4   Our robot (2638) shooting on the move in the shop, testing a BLine auto.
 #                                Source: ~/Downloads/2638_auto_shop_bline.mov (Edan, Oct 10 2026).
