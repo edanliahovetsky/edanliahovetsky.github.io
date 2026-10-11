@@ -1,6 +1,6 @@
 // BLine chapter. Most of it is normal page flow; this file drives:
 //   - the ONE pinned sequence on the page: the real BLine 2027 editor (captured frame by frame by
-//     scripts/capture/takes.mjs), scrubbed by scroll through Press play, Generate, Organize and Learn, on tilted
+//     scripts/capture/takes.mjs), scrubbed by scroll through Simulate, Generate, Organize and Learn, on tilted
 //     screens with a panel lifted out beside them at full 4K sharpness (the launch film's framing);
 //   - the team montage's labels (from the clip's currentTime);
 //   - the banner wall dropping in once, with the film's bounce, when it scrolls into view;
@@ -157,7 +157,7 @@ function render(t) {
   // The screen is already there as the sequence scrolls into view (no blank stage before the pin starts).
   const scr = { a: 1 };
   if (inb("play")) {
-    // Press play. — the one quick beat before the features: the robot runs the generated path.
+    // Simulate. — the one quick beat before the features: the robot runs the generated path.
     const p = at("play"), tk = T("play"), play = tk.marker("play"), f = lerp(play - 14, tk.frames() - 1, p);
     const r = tk.probe(f) || { x: 760, y: 560 };
     const follow = smooth(play, play + 12, f) * (1 - smooth(0.82, 1, p));
@@ -166,7 +166,7 @@ function render(t) {
     sizeScreen(false);
     if (portrait()) scr.ty = topOf(window.innerHeight, screen.el, scr.s);
     screen.draw(tk, f, cam);
-    word = ["Press play.", "Draw a path, and BLine simulates the robot driving it", win(p, 0.1, 0.15), "left"];
+    word = ["Simulate.", "Draw a path and watch the robot drive it", win(p, 0.1, 0.15), "left"];
   } else if (inb("generate")) {
     // Generate. — tilted screen, the Constraints panel lifted out beside it at full size.
     const p = at("generate"), tk = T("generate"), f = lerp(0, tk.frames() - 1, clamp((p - 0.04) / 0.92));
