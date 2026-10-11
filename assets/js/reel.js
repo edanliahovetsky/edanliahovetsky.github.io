@@ -86,6 +86,15 @@
   });
 
   // ---- Active chapter in the nav ----
+  // ---- Phone menu: the chapter links open under the bar ----
+  var bar0 = $("#bar"), menuBtn = $(".menu-btn");
+  if (menuBtn) {
+    var setMenu = function (open) { bar0.classList.toggle("menu-open", open); menuBtn.setAttribute("aria-expanded", open ? "true" : "false"); };
+    menuBtn.addEventListener("click", function () { setMenu(!bar0.classList.contains("menu-open")); });
+    $$(".chapters a").forEach(function (a) { a.addEventListener("click", function () { setMenu(false); }); });
+    document.addEventListener("click", function (e) { if (!bar0.contains(e.target)) setMenu(false); });
+  }
+
   var navLinks = $$(".chapters a");
   if (io) {
     var chapterIO = new IntersectionObserver(function (entries) {

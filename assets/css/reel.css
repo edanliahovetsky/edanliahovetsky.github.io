@@ -102,8 +102,18 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   transform: scaleX(0);
   background: var(--accent);
 }
+.menu-btn { display: none; }
+/* Phones: the chapter links fold into a menu under the bar, so every link desktop has is still one tap away. */
 @media (max-width: 860px) {
-  .chapters a:not(.cta) { display: none; }
+  .menu-btn { display: block; margin-left: auto; padding: 7px 14px; border: 1px solid var(--line-2); border-radius: 999px; background: transparent; color: var(--ink); font: 500 13px var(--body); }
+  .chapters {
+    position: absolute; top: 60px; left: 0; right: 0; display: grid; gap: 2px; padding: 8px var(--gutter) 14px;
+    background: rgba(5, 7, 11, 0.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line);
+    opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s 0.2s;
+  }
+  .bar.menu-open .chapters { opacity: 1; visibility: visible; transform: none; transition: opacity 0.2s ease, transform 0.2s ease; }
+  .chapters a { padding: 12px 6px; font-size: 16px; color: var(--ink-2); border-radius: 10px; }
+  .chapters a.cta { margin: 6px 0 0; text-align: center; }
 }
 
 /* ---------- Opening ---------- */
@@ -400,8 +410,8 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   .bl-wall { --w: calc((100vw - 2 * var(--gutter)) * 0.084); width: calc(100vw - 2 * var(--gutter)); }
   .bl-quotes { grid-template-columns: 1fr; }
   .bl-close .fact, .bl-close .fact + .fact { padding: 12px 14px; border-bottom: 1px solid var(--line-2); }
-  .bl-close .fact p { display: none; }
-  .bl-close .fact h3 { margin: 0; font-size: 16px; }
+  .bl-close .fact p { font-size: 14.5px; }
+  .bl-close .fact h3 { margin: 0 0 4px; font-size: 16px; }
   /* Phones: the photo sits above the text (square, framed on the teammates and the screen), not behind it. */
   .bl-close { display: block; min-height: 0; background: var(--bg); }
   .bl-close img { position: relative; inset: auto; height: auto; aspect-ratio: 1; object-position: 72% 50%; }
