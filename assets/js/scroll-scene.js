@@ -76,5 +76,10 @@ export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, s
     if (!st) return;
     tween.progress(st.progress); proxy.t = st.progress * total; t = proxy.t; draw();
   });
-  return { draw };
+  /** Scrolls the page so the scene shows timeline position t. */
+  const scrollToT = (t2) => {
+    const st = tween.scrollTrigger;
+    if (st) window.scrollTo({ top: st.start + (t2 / total) * (st.end - st.start), behavior: "smooth" });
+  };
+  return { draw, scrollToT };
 }

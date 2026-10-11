@@ -213,13 +213,14 @@ function render(t) {
   frame3d(screen.el, scr, scr.a);
   frame3d(panel.el, pnl || {}, pnl ? pnl.a : 0);
   setWord(...word);
+  setStep(t);
 }
 /**
  * Places the tilted screen and the lifted panel side by side inside the stage, in pixels, so neither runs off
  * screen at any window size. On phones they stack: screen above, panel below.
  */
 const portrait = () => window.innerWidth / window.innerHeight < 0.9;
-const TOP = 72; // below the site header
+const TOP = 112; // below the site header and the step indicator
 /** Portrait: the space between the header and the word card, which the screen (and panel) share. */
 function portraitRoom() { return Math.max(240, word.offsetTop - 18 - TOP); }
 /** Portrait screens: the editor screen is a taller crop pinned near the top; with a panel it gives most of the room up. */
@@ -296,6 +297,22 @@ const loadData = Promise.all([fetch("assets/seq/manifest.json").then((r) => r.js
     screen.el.style.backgroundImage = `url(${takes.play.src(0)})`;
     ready = true;
   });
+// Step indicator: shows which beat is on screen and jumps to a beat when clicked.
+const steps = [...document.querySelectorAll("#bl-steps button")];
+let stepShown = "";
+function setStep(t) {
+  const name = BEATS.find((b) => TL.in(t, b)) || (t >= TL.total ? "learn" : "play");
+  if (name === stepShown) return;
+  stepShown = name;
+  for (const b of steps) b.classList.toggle("is-on", b.dataset.step === name);
+}
+for (const b of steps) {
+  b.addEventListener("click", () => {
+    const [a, z] = TL.span[b.dataset.step];
+    scene.scrollToT(a + (z - a) * 0.4);
+  });
+}
+
 const scene = pinScene({
   el: root, stage: root.querySelector(".scene-stage"), total: TL.total, unitVh: UNIT_VH, scrub: 0.6,
   render: (t) => { if (ready) render(t); },
