@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Edan Liahovetsky</title>
+  <meta name="description" content="Edan Liahovetsky builds robotics software. Creator of BLine, used by 30+ FIRST Robotics Competition teams including 18 at the 2026 World Championship. President & Programming Lead, FRC 2638.">
+  <link rel="canonical" href="https://edanliahovetsky.github.io/">
+  <meta name="theme-color" content="#05070b">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Edan Liahovetsky">
+  <meta property="og:description" content="Robotics software that other teams run on their robots. Creator of BLine.">
+  <meta property="og:url" content="https://edanliahovetsky.github.io/">
+  <meta property="og:image" content="https://edanliahovetsky.github.io/assets/img/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Roboto:ital,wght@0,400;0,900;1,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/reel.css">
+  <script>document.documentElement.classList.add("js")</script>
+</head>
+<body>
+
+<!-- ======================================================= TOP BAR -->
+<header class="bar" id="bar">
+  <div class="wrap bar-inner">
+    <a class="brand" href="#top" aria-label="Edan Liahovetsky, back to top">Edan Liahovetsky</a>
+    <nav class="chapters" aria-label="Chapters">
+      <a href="#bline">BLine</a>
+      <a href="#agents">Agents</a>
+      <a href="#teaching">Teaching</a>
+      <a href="#nasa">NASA</a>
+      <a href="#flat7">Flat 7</a>
+      <a class="cta" href="#resume">Résumé</a>
+    </nav>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main id="top">
+
+<!-- ======================================================= 00 OPEN -->
+<section class="open">
+  <div class="wrap open-grid">
+    <div class="open-copy">
+      <span class="label reveal">Great Neck, NY · Class of 2027</span>
+      <h1 class="display reveal">Edan<br>Liahovetsky<span class="dot">.</span></h1>
+      <p class="lede reveal">I build robotics software that other teams run on their robots. Creator of BLine. President &amp; Programming Lead of Rebel Robotics, FRC 2638.</p>
+      <div class="links reveal">
+        <a class="pill solid" href="mailto:edan.liahovetsky@icloud.com">Email me</a>
+        <a class="pill" href="https://github.com/edanliahovetsky">GitHub</a>
+        <a class="pill" href="https://www.linkedin.com/in/edan-liahovetsky/">LinkedIn</a>
+        <a class="pill" href="#resume">Résumé ↓</a>
+      </div>
+    </div>
+    <figure class="open-portrait reveal">
+      <img src="assets/img/edan-square.jpg" alt="Portrait of Edan Liahovetsky" width="1200" height="1200" fetchpriority="high">
+    </figure>
+  </div>
+
+  <nav class="wrap index-strip" aria-label="Chapters">
+    <a class="index-card reveal" href="#bline"><img src="assets/media/bline-teams.jpg" alt="" loading="lazy"><span class="label">01</span><b>BLine</b><small>Autonomy used by 30+ teams</small></a>
+    <a class="index-card reveal" href="#agents"><img src="assets/media/field26.png" alt="" loading="lazy"><span class="label">02</span><b>Agents</b><small>AI that tests robot code</small></a>
+    <a class="index-card reveal" href="#teaching"><img src="assets/media/fll-coaching.jpg" alt="" loading="lazy"><span class="label">03</span><b>Teaching</b><small>100+ member team, FLL coach</small></a>
+    <a class="index-card reveal" href="#nasa"><img data-push src="assets/media/nasa-rover-test.jpg" alt="" loading="lazy"><span class="label">04</span><b>NASA Glenn</b><small>Engineering Institute 2025</small></a>
+    <a class="index-card reveal" href="#flat7"><img src="assets/media/flat7-piano.jpg" alt="" loading="lazy"><span class="label">05</span><b>Flat 7</b><small>Jazz-fusion quartet</small></a>
+  </nav>
+</section>
+
+<!-- ======================================================= 01 BLINE -->
+<section class="chapter" id="bline" data-chapter>
+  <!-- Header: our robot testing an auto in the shop, playing behind the opening line. -->
+  <div class="bl-open">
+    <video autoplay muted loop playsinline preload="none" poster="assets/media/bline-open.jpg" aria-label="Our robot, Team 2638, shooting on the move while testing a BLine autonomous routine in the shop">
+      <source data-src="assets/media/bline-open.mp4" type="video/mp4">
+    </video>
+    <div class="wrap bl-open-text">
+      <p class="bl-line reveal">The <i>FIRST</i> Robotics Competition is a game of autonomy<span class="dot">.</span></p>
+    </div>
+    <p class="bl-credit">Our robot, Team 2638, testing a BLine auto in the shop</p>
+  </div>
+
+  <div class="wrap bl-head">
+    <p class="bl-problem reveal">Making a robot drive a precise path on its own is one of the hardest parts of the game, and most teams don’t have the tools to do it well.</p>
+    <span class="label reveal">01 — Open source</span>
+    <h2 class="display reveal">BLine<span class="dot">.</span></h2>
+    <p class="lede reveal">So I built one. BLine is a free, open-source tool that lets any team draw a path, simulate it, and run it on their robot.</p>
+  </div>
+
+  <!-- The one pinned sequence on the page (assets/js/bline.js): the real BLine 2027 editor, scrubbed by scroll. -->
+  <div class="scene bl" id="bline-scene">
+    <div class="scene-stage bl-stage">
+      <div class="bl-screen" id="bl-screen" aria-hidden="true"></div>
+      <div class="bl-screen bl-panel" id="bl-panel" aria-hidden="true"></div>
+      <p class="bl-word" id="bl-word"><span></span><small></small></p>
+    </div>
+  </div>
+
+  <div class="wrap bl-more reveal">
+    <span class="label">Also in the editor</span>
+    <ul><li>Command palette</li><li>Event triggers</li><li>Path health</li><li>Linked elements</li><li>Offline editing</li><li>Desktop apps</li></ul>
+  </div>
+
+  <!-- Teams running BLine -->
+  <div class="wrap bl-section">
+    <h3 class="bl-h reveal">Then teams took it to the field<span class="dot">.</span></h3>
+    <div class="bl-teams reveal">
+      <figure class="bl-montage">
+        <video id="bl-teams" autoplay muted loop playsinline preload="none" poster="assets/media/bline-teams.jpg" aria-label="Autonomous runs from eight teams using BLine in 2026 competition">
+          <source data-src="assets/media/bline-teams.mp4" type="video/mp4">
+        </video>
+        <figcaption id="bl-team-label"><b>Team 2638</b><span>Rocket City Regional · my team</span></figcaption>
+      </figure>
+      <div class="bl-stats">
+        <div><b data-count="30" data-suffix="+">30+</b><span>teams run BLine</span></div>
+        <div><b data-count="4">4</b><span>countries</span></div>
+        <div><b data-count="18">18</b><span>teams at the 2026 World Championship</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- The banner wall: drops in once, with the launch film's bounce, when it scrolls into view. -->
+  <div class="bl-wall-wrap">
+    <div class="bl-wall" id="bl-wall" aria-label="19 blue banners won by teams running BLine in 2026"></div>
+    <p class="wrap bl-wall-sum reveal"><b><span id="bl-wall-count">19</span> banners.</b> Won by teams running BLine in 2026.</p>
+  </div>
+
+  <!-- Voices -->
+  <div class="wrap bl-section">
+    <div class="bl-quotes">
+      <blockquote class="q q-magic reveal"><small>We at Code Orange firmly believe</small><p>BLine is pure magic.</p><cite><b>3476</b> Code Orange</cite></blockquote>
+      <blockquote class="q reveal"><p>“The tracking was super stable.”</p><cite><b>449</b> The Blair Robot Project</cite></blockquote>
+      <blockquote class="q reveal"><p>“…it was super accurate.”</p><cite><b>6989</b> KAISER</cite></blockquote>
+      <blockquote class="q reveal"><p>“Easy to work with for someone of my…unfamiliarity with auto planning.”</p><cite><b>5503</b> Smithville Tiger Trons · mentor</cite></blockquote>
+      <blockquote class="q reveal"><p>“Plus many more miracles that wouldn’t have been possible without BLine.”</p><cite><b>4915</b> Spartronics · 2026 Einstein</cite></blockquote>
+    </div>
+    <p class="bl-qnote">From public Chief Delphi posts, 2026 season.</p>
+  </div>
+
+  <!-- Our robot -->
+  <div class="wrap bl-section">
+    <h3 class="bl-h reveal">From our shop to the Championship<span class="dot">.</span></h3>
+    <figure class="bl-alhu reveal">
+      <div class="bl-alhu-media">
+        <video id="bl-alhu" autoplay muted loop playsinline preload="none" poster="assets/media/bline-champs.jpg" aria-label="FIRST Robotics Competition World Championship: our robot, 2638, labeled during the autonomous period">
+          <source data-src="assets/media/bline-champs.mp4" type="video/mp4">
+        </video>
+      </div>
+      <figcaption>FIRST Robotics Competition World Championship, Houston, Texas. Our team,&nbsp;2638.</figcaption>
+    </figure>
+  </div>
+
+  <!-- Close: teammates at Worlds, with what BLine is and where to find it. -->
+  <div class="bl-close">
+    <img src="assets/media/team-worlds-screen.jpg" alt="Rebel Robotics teammates watching the arena screen at the 2026 FIRST World Championship" loading="lazy" width="1800" height="1200" data-push>
+    <div class="bl-close-body wrap">
+      <div class="bl-close-head reveal">
+        <span class="label">01 — BLine</span>
+        <h3 class="display">Built with my team.<br>Shared with every team<span class="dot">.</span></h3>
+      </div>
+      <div class="facts">
+        <div class="fact reveal"><h3>Robot library + editor</h3><p>A Java library that runs on the robot, and a web and desktop editor for drawing, simulating, and tuning paths.</p></div>
+        <div class="fact reveal"><h3>Free and open source</h3><p>BSD-licensed, documented, with interactive lessons built in. Used by 30+ teams in 4 countries.</p></div>
+        <div class="fact reveal"><h3>Into FIRST’s ecosystem</h3><p>Integration into the official FRC software ecosystem is underway for the 2027 season.</p></div>
+      </div>
+      <div class="after-links reveal">
+        <a class="pill solid" href="https://bline-web.pages.dev/">Try the editor</a>
+        <a class="pill" href="https://github.com/edanliahovetsky/BLine-Lib">GitHub</a>
+        <a class="pill" href="https://bline-docs.pages.dev/">Docs</a>
+        <a class="pill" href="https://www.chiefdelphi.com/t/introducing-bline-a-new-rapid-polyline-autonomous-path-planning-suite/509778">Launch thread</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= 02 AGENTS -->
+<section class="chapter" id="agents" data-chapter>
+  <div class="wrap chapter-head">
+    <span class="label reveal">02 — AI tooling</span>
+    <h2 class="display reveal">Agents that debug robots<span class="dot">.</span></h2>
+    <p class="lede reveal">Tools that let AI coding agents debug robot code like an engineer: read the logs, find the problem, test the fix in simulation.</p>
+    <div class="works-with reveal">
+      <span class="label">Works with</span>
+      <span class="logo-chip"><img src="assets/img/logos/claude.svg" alt="">Claude Code</span>
+      <span class="logo-chip"><img src="assets/img/logos/openai.svg" alt="">Codex</span>
+      <span class="logo-chip"><img src="assets/img/logos/cursor.svg" alt="">Cursor</span>
+      <a class="pill" href="https://github.com/edanliahovetsky/wpilib-agent-tools" style="margin-left:auto">GitHub</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="scope reveal" id="scope" aria-label="An agent analyzing our robot's World Championship match log in an AdvantageScope-style view">
+      <div class="scope-titlebar"><i></i><i></i><i></i><span id="scope-title">AdvantageScope</span></div>
+      <div class="scope-body">
+        <aside class="scope-side" aria-hidden="true">
+          <div class="side-head">Log fields</div>
+          <ul class="tree" id="scope-tree"></ul>
+        </aside>
+        <div class="scope-main">
+          <div class="scope-tabs" id="scope-tabs" aria-hidden="true">
+            <button type="button" data-tab="field">3D Field</button>
+            <button type="button" data-tab="swerve">Swerve</button>
+            <button type="button" data-tab="graph">Line Graph</button>
+          </div>
+          <div class="scope-view" id="scope-view">
+            <div class="view" data-view="field"><canvas id="scope-3d"></canvas></div>
+            <div class="view" data-view="swerve"><canvas id="scope-swerve"></canvas></div>
+            <div class="view" data-view="graph"><canvas id="scope-graph"></canvas><div class="legend" id="scope-legend"></div></div>
+            <div class="callout" id="scope-callout"></div>
+          </div>
+          <div class="scope-timeline">
+            <span class="mode" id="scope-mode">DISABLED</span>
+            <div class="track"><i class="seg auto" id="seg-auto"></i><i class="seg teleop" id="seg-teleop"></i><i class="head" id="scope-head"></i></div>
+            <span class="clock" id="scope-clock">0:00</span>
+          </div>
+        </div>
+        <aside class="agent">
+          <div class="agent-head"><span class="pulse"></span>Agent <small>wpilib-agent-tools</small></div>
+          <div class="agent-log" id="agent-log" aria-live="off"></div>
+          <div class="agent-steps" id="agent-steps"></div>
+        </aside>
+      </div>
+      <svg class="cursor" id="scope-cursor" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 2l13 7-6 1.6L7 17z" fill="#eef2f7" stroke="#05070b" stroke-width="1.2" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= 03 TEACHING -->
+<section class="chapter" id="teaching" data-chapter>
+  <div class="wrap split flip" style="padding-top:clamp(96px,14vw,180px)">
+    <div class="reveal">
+      <div class="phone">
+        <video id="teach-video" autoplay muted loop playsinline preload="none" poster="assets/media/teach-shooter.jpg" aria-label="Edan explaining the shooter mechanism on the team's robot">
+          <source data-src="assets/media/teach-shooter.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+    <div>
+      <span class="label reveal">03 — Leadership &amp; teaching</span>
+      <h2 class="display reveal">Teaching the next team<span class="dot">.</span></h2>
+      <p class="lede reveal">I lead Rebel Robotics, a 100+ member FIRST Robotics Competition team. I rebuilt our software around logging, replay, and simulation, and I teach programming to every new class.</p>
+      <div class="numbers reveal">
+        <div><b data-count="100" data-suffix="+">100+</b><span>team members</span></div>
+        <div><b>30–40</b><span>students taught each year</span></div>
+        <div><b data-count="4" data-suffix="×">4×</b><span>World Championship qualifier</span></div>
+      </div>
+      <ol class="ladder reveal">
+        <li><time>2025–26</time>President &amp; Programming Lead</li>
+        <li><time>2024</time>Programming Lead</li>
+        <li><time>2023</time>Programming Co-Lead</li>
+      </ol>
+      <div class="links reveal"><a class="pill" href="https://www.youtube.com/@edanliahovetsky4484">My tutorials on YouTube</a></div>
+    </div>
+  </div>
+
+  <div class="strip" aria-label="Photos from Rebel Robotics">
+    <figure class="shot reveal"><img src="assets/media/team-optimum-demo.jpg" alt="Edan explaining Rebel Robotics' robot to a visitor at Optimum's Technology Innovation Summit" loading="lazy"><figcaption>Showing our robot at Optimum’s Technology Innovation Summit</figcaption></figure>
+    <figure class="shot reveal"><img src="assets/media/team-optimum-summit.jpg" alt="Rebel Robotics with its robot at Optimum's 2026 Technology Innovation Summit" loading="lazy"><figcaption>Optimum named us an Outstanding Community Partner</figcaption></figure>
+    <figure class="shot reveal"><img src="assets/media/team-first-sign.jpg" alt="Rebel Robotics team members together at night in a Houston stadium" loading="lazy"><figcaption>Rebel Robotics · World Championship, Houston</figcaption></figure>
+    <figure class="shot reveal"><img src="assets/media/team-pit.jpg" alt="Rebel Robotics with alliance partners 533 and 5736 and their three robots" loading="lazy"><figcaption>With alliance partners 533 and 5736</figcaption></figure>
+    <figure class="shot reveal"><img src="assets/media/team-rocket-city-trip.jpg" alt="Rebel Robotics teammates gathered around a laptop at dinner during the Rocket City Regional trip" loading="lazy"><figcaption>Team dinner on the Rocket City trip</figcaption></figure>
+  </div>
+
+  <!-- FIRST LEGO League: the team Edan coached, in the program where he started robotics. -->
+  <div class="wrap voyager">
+    <div class="voyager-head">
+      <div>
+        <span class="label reveal">FIRST LEGO League · Team 49905</span>
+        <h3 class="display reveal">Team Voyager<span class="dot">.</span></h3>
+      </div>
+      <p class="lede reveal">I coached Voyager, 15–20 fourth and fifth graders in Great Neck’s weekend FIRST LEGO League program, the same program where I started robotics.</p>
+    </div>
+    <div class="voyager-mosaic">
+      <figure class="big reveal"><img data-push src="assets/media/fll-voyager-award.jpg" alt="Edan with Team Voyager and their Robot Design award at the FIRST Long Island regional" loading="lazy"><figcaption>Regional awards · February 2026</figcaption></figure>
+      <figure class="reveal"><img src="assets/media/fll-coaching.jpg" alt="Edan helping a student line up the team's robot at the competition table" loading="lazy"><figcaption>At the table</figcaption></figure>
+      <figure class="reveal"><img src="assets/media/fll-team-voyager.jpg" alt="Edan with students from the team and their robot" loading="lazy"><figcaption>With their robot</figcaption></figure>
+    </div>
+    <dl class="voyager-facts reveal">
+      <div><dt>Role</dt><dd>Paid co-coach and main technical mentor</dd></div>
+      <div><dt>Taught</dt><dd>Programming and mechanical design</dd></div>
+      <div><dt>Toughest topic</dt><dd>PID with gyro feedback to drive straight</dd></div>
+      <div><dt>Result</dt><dd>First Finalist, Robot Design</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- ======================================================= 04 NASA -->
+<section class="chapter" id="nasa" data-chapter>
+  <div class="wrap chapter-head">
+    <span class="label reveal">04 — NASA Glenn Research Center</span>
+    <h2 class="display reveal">A week at NASA<span class="dot">.</span></h2>
+  </div>
+  <div class="wrap">
+    <figure class="hero-photo reveal">
+      <img data-push src="assets/media/nasa-rover-test.jpg" alt="Edan, center, with two teammates loading weights onto their rover to test wheel grouser designs" loading="lazy">
+      <figcaption>Testing our rover’s wheel designs · NASA/Jef Janis</figcaption>
+    </figure>
+    <div class="nasa-grid">
+      <figure class="reveal"><img src="assets/media/nasa-sign.jpg" alt="Edan in front of the NASA Glenn Research Center sign at dusk" loading="lazy"></figure>
+      <figure class="reveal"><img src="assets/media/nasa-anechoic-dome.jpg" alt="An acoustic test rig inside NASA Glenn's anechoic dome" loading="lazy"><span class="credit">Glenn’s acoustic test dome</span></figure>
+      <figure class="reveal"><img src="assets/media/nasa-acoustic-liner.jpg" alt="A NASA engineer working on an acoustic test article" loading="lazy"><span class="credit">Acoustic liner testing</span></figure>
+    </div>
+    <div class="nasa-copy">
+      <p class="lede reveal">Selected from 410 applicants for NASA Glenn’s High School Engineering Institute in July 2025, and received Outstanding Achievement recognition.</p>
+      <ul class="bullets reveal">
+        <li>Designed and tested a jet-noise acoustic liner and a rover wheel.</li>
+        <li>Built an Arduino power-management circuit.</li>
+        <li>Presented our prototypes to NASA staff.</li>
+        <li>Arranged extra time with the engineers who test rover mobility.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="fullbleed">
+    <img data-push src="assets/media/nasa-benefit-of-all.jpg" alt="" loading="lazy">
+    <p class="reveal">For the benefit of all<span class="dot">.</span></p>
+  </div>
+</section>
+
+<!-- ======================================================= 05 FLAT 7 -->
+<section class="chapter" id="flat7" data-chapter>
+  <div class="band">
+    <div class="band-media">
+      <video autoplay muted loop playsinline preload="none" poster="assets/media/flat7-piano.jpg" aria-label="Edan playing piano with Flat 7 at Battle of the Bands, February 2025">
+        <source data-src="assets/media/flat7-piano.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="wrap band-inner">
+      <span class="label reveal">05 — Music</span>
+      <h2 class="display reveal">Flat 7<span class="dot">.</span></h2>
+      <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      <p class="lede reveal">I founded a jazz-fusion quartet (piano, guitar, bass, and drums), arranged our set, and led the band from the piano. We played for residents of a senior living community and for a few hundred people at Battle of the Bands.</p>
+    </div>
+  </div>
+  <div class="wrap band-clips">
+    <figure class="clip reveal">
+      <video autoplay muted loop playsinline preload="none" poster="assets/media/flat7-intro.jpg" aria-label="Edan at the microphone introducing the band">
+        <source data-src="assets/media/flat7-intro.mp4" type="video/mp4">
+      </video>
+      <figcaption>Introducing the band</figcaption>
+    </figure>
+    <figure class="clip reveal">
+      <video autoplay muted loop playsinline preload="none" poster="assets/media/flat7-band.jpg" aria-label="The full Flat 7 quartet playing on stage">
+        <source data-src="assets/media/flat7-band.mp4" type="video/mp4">
+      </video>
+      <figcaption>The full quartet</figcaption>
+    </figure>
+  </div>
+  <div class="wrap band-foot reveal">
+    <span class="label">Battle of the Bands · February 2025</span>
+    <a class="pill" href="https://www.youtube.com/watch?v=hqi3oAcBevQ">Watch the full set</a>
+  </div>
+</section>
+
+<!-- ======================================================= 06 RÉSUMÉ -->
+<section class="resume" id="resume" data-chapter>
+  <div class="wrap">
+    <div class="resume-head">
+      <div>
+        <span class="label reveal">06 — Credits</span>
+        <h2 class="display reveal">Résumé<span class="dot">.</span></h2>
+        <p class="print-contact">edan.liahovetsky@icloud.com · github.com/edanliahovetsky · linkedin.com/in/edan-liahovetsky · Great Neck, NY</p>
+      </div>
+      <div class="links reveal">
+        <button class="pill solid" type="button" onclick="window.print()">Save as PDF</button>
+        <a class="pill" href="mailto:edan.liahovetsky@icloud.com">Email</a>
+      </div>
+    </div>
+
+    <p class="resume-profile reveal">Created BLine, an open-source autonomy suite adopted by 30+ FIRST Robotics Competition (FRC) teams, including 18 at the 2026 World Championship. High school senior, president, and lead programmer for a 100+ member robotics team.</p>
+
+    <div class="resume-grid credits-roll">
+      <div>
+        <div class="rsec">
+          <span class="label">Selected engineering projects</span>
+          <article class="role reveal">
+            <div class="role-top"><div><h3>BLine</h3><div class="org">Creator, Maintainer &amp; Community Lead</div></div><time>Jun 2025 – Present</time></div>
+            <ul>
+              <li>Identified limited robot testing time as an autonomy-development bottleneck; designed BLine to help teams author, tune, and validate reliable routines despite imperfect drivetrains.</li>
+              <li>Built endpoint path tracking, cross-track correction, handoff radii, motion constraints, Java/WPILib integration, and web/desktop path-authoring and simulation tools.</li>
+              <li>Adopted by 30+ teams, including 18 at the 2026 World Championship. Adopting teams won 15 competitions (4 regionals, 8 district events, 3 state/district championships), a World Championship division, and 8 Autonomous Awards in 2026.</li>
+              <li>Working with FIRST developers on BLine integration into the official FRC software ecosystem, targeting the 2027 season.</li>
+              <li>In randomized WPILib physics-simulation trials against PathPlanner using an Artificial Bee Colony optimizer, measured 97% lower path computation time and 66% lower waypoint cross-track error.</li>
+              <li>Maintain project documentation, releases, and direct technical support for adopting teams.</li>
+            </ul>
+          </article>
+          <article class="role reveal">
+            <div class="role-top"><div><h3>wpilib-agent-tools</h3><div class="org">Creator</div></div><time>Feb 2026 – Present</time></div>
+            <ul>
+              <li>Architected an open-source toolkit enabling AI coding agents (Codex, Claude Code, Cursor) to run robot simulations, collect telemetry, analyze logs, revise code, and re-test in sandboxed engineering loops.</li>
+              <li>Own system architecture and technical decisions; independently review AI-generated code, diagnose failures, and validate changes through simulation, telemetry, and iterative testing.</li>
+            </ul>
+          </article>
+        </div>
+        <div class="rsec">
+          <span class="label">Robotics leadership &amp; systems engineering</span>
+          <article class="role reveal">
+            <div class="role-top"><div><h3>Rebel Robotics, FRC Team 2638</h3><div class="org">President &amp; Programming Lead · Member since 2022</div></div></div>
+            <ul>
+              <li>Lead all-hands meetings and competition strategy for a 100+ member team; recruit and mentor new members through hands-on technical workshops; present the team’s work at public events.</li>
+              <li>Rebuilt the Java/WPILib software stack around structured logging, log replay, and physics simulation; led swerve-drive, vision-based pose estimation, and automated alignment development.</li>
+              <li>Coach the drive team on autonomous selection, pre-match checks, and field debugging; operate and debug the robot at events, including four FIRST World Championship qualifications. Team earned two 2026 Excellence in Engineering Awards and the 2024 World Championship Engineering Inspiration Award.</li>
+            </ul>
+          </article>
+        </div>
+        <div class="rsec">
+          <span class="label">Research &amp; engineering experience</span>
+          <article class="role reveal">
+            <div class="role-top"><div><h3>NASA Glenn High School Engineering Institute</h3></div><time>Jul 2025</time></div>
+            <ul><li>Completed hands-on engineering projects, received Outstanding Achievement recognition, and arranged additional rover-mobility laboratory shadowing.</li></ul>
+          </article>
+          <article class="role reveal">
+            <div class="role-top"><div><h3>Applied research</h3></div></div>
+            <ul><li>Built geospatial datasets and a Random Forest model to study natural hydrogen occurrence and model limitations; generated synthetic imagery in Unreal Engine 5 for drone-based litter-detection research.</li></ul>
+          </article>
+        </div>
+      </div>
+
+      <div>
+        <div class="rsec reveal">
+          <span class="label">Education</span>
+          <ul class="plain">
+            <li><b>Great Neck South High School</b>Great Neck, NY · Class of 2027</li>
+            <li><b>GPA</b>98.6 weighted · 93.9 unweighted</li>
+            <li><b>SAT</b>1540 superscore (790 Math, 750 Reading &amp; Writing)</li>
+          </ul>
+        </div>
+        <div class="rsec reveal">
+          <span class="label">Honors</span>
+          <ul class="plain">
+            <li><b>National Merit Commended Student</b>2026</li>
+            <li><b>AP Scholar with Distinction</b>2026</li>
+          </ul>
+        </div>
+        <div class="rsec reveal">
+          <span class="label">Additional activities</span>
+          <ul class="plain">
+            <li><b>FIRST LEGO League coach</b>Paid coach</li>
+            <li><b>Flat 7</b>Founder and pianist, jazz-fusion quartet</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>© 2026 Edan Liahovetsky</span>
+    <nav><a href="mailto:edan.liahovetsky@icloud.com">Email</a><a href="https://github.com/edanliahovetsky">GitHub</a><a href="https://www.linkedin.com/in/edan-liahovetsky/">LinkedIn</a><a href="https://www.youtube.com/@edanliahovetsky4484">YouTube</a></nav>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" defer></script>
+<script src="assets/js/reel.js" defer></script>
+<script type="module" src="assets/js/bline.js"></script>
+<script type="module" src="assets/js/scope.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+.vscode
+.DS_Store
+# Raw source media from the first site version. Kept on disk for re-encoding; never commit.
+assets/videos/
+assets/profile/
+assets/projects/
+assets/source/
+# Agent notes and local tooling stay on this machine only (the repo is public and Pages serves every file).
+AGENTS.md
+CLAUDE.md
+.claude/
