@@ -331,7 +331,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .q-magic { grid-column: 1 / -1; text-align: center; background: radial-gradient(80% 120% at 50% 0%, rgba(77, 163, 255, 0.12), var(--panel) 70%); }
 .q-magic small { display: block; margin-bottom: 10px; font: 600 clamp(16px, 1.6vw, 22px) var(--display); color: var(--ink-2); }
 .q-magic p { font: 800 clamp(44px, 7vw, 104px)/1 var(--display); letter-spacing: -0.045em; background: linear-gradient(90deg, #ffffff, #8cc4ff 60%, #4da3ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.bl-qnote { margin-top: 14px; font: 500 11px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.bl-qlede { margin: calc(-1 * clamp(10px, 1.5vw, 20px)) 0 clamp(24px, 3vw, 36px); color: var(--ink-2); font-size: 17px; max-width: 46ch; }
 
 /* Our robot */
 .bl-alhu { margin: 0; }
