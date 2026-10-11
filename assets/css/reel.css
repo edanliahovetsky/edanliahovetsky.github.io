@@ -741,9 +741,18 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .resume > .wrap { padding-top: clamp(48px, 6vw, 88px); }
 .resume-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: clamp(40px, 6vw, 64px); }
 .resume-head h2 { font-size: clamp(48px, 8vw, 104px); margin-top: 14px; }
-.resume-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 80px); }
-.rsec + .rsec { margin-top: 40px; }
-.rsec > .label { display: block; padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+/* Education, honors and activities as a strip of three across the top; each experience section below has its label
+   in a left column and its roles beside it, so the page fills its width instead of leaving a short side column. */
+.resume-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: clamp(36px, 5vw, 56px); }
+.rfact { padding: 20px 22px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.rfact > .label { display: block; }
+.rfact .plain { padding-top: 12px; }
+.rsec { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); padding-top: 22px; border-top: 1px solid var(--line-2); }
+.rsec + .rsec { margin-top: clamp(28px, 3.5vw, 44px); }
+.rsec > .label { display: block; padding-top: 22px; line-height: 1.6; color: var(--ink-2); }
+.rsec-body .role:first-child { padding-top: 18px; }
+.rsec-body .role:last-child { border-bottom: 0; }
+.role ul { max-width: 78ch; }
 .role { padding: 20px 0; border-bottom: 1px solid var(--line); }
 .role-top { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .role h3 { font: 600 19px/1.3 var(--display); letter-spacing: -0.01em; }
@@ -759,10 +768,12 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .chips span { padding: 4px 10px; border-radius: 999px; background: var(--panel-2); color: var(--ink-2); font-size: 13px; }
 .credits-roll .role, .credits-roll .rsec { transition: opacity 0.6s ease, transform 0.6s ease; }
 @media (max-width: 860px) {
-  .resume-grid { grid-template-columns: 1fr; }
+  .resume-facts { grid-template-columns: 1fr; }
+  .rsec { grid-template-columns: 1fr; gap: 0; }
+  .rsec > .label { padding-top: 0; }
 }
 
-.resume-profile { max-width: 70ch; margin: 0 0 clamp(28px, 4vw, 44px); color: var(--ink-2); font-size: 17px; }
+.resume-profile { max-width: 80ch; margin: 0 0 clamp(28px, 4vw, 44px); color: var(--ink-2); font-size: 17px; }
 
 /* ---------- Footer ---------- */
 
