@@ -68,7 +68,7 @@ export class Director {
       window.requestAnimationFrame = (cb) => setTimeout(() => {
         const now = performance.now();
         if (seen.has(cb)) cb(now + 10); else { seen.add(cb); cb(now); }
-      }, P - (performance.now() % P) || P);
+      }, (() => { const d = P - (performance.now() % P); return d < 1 ? d + P : d; })());
       window.cancelAnimationFrame = (id) => clearTimeout(id);
     }, FRAME_MS);
     await page.goto(EDITOR_URL);

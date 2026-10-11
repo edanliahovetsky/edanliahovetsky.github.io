@@ -839,6 +839,13 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 
 #agents .scope { margin-bottom: var(--gap-section); }
 #scope .scope-side { display: none; }
+/* Recorded session (scope.js): the views are one video at their recorded shape; the agent log beside it is HTML. */
+.scope.is-recorded .scope-body { height: auto; }
+.scope.is-recorded .scope-main { display: block; background: #070a0f; }
+.scope.is-recorded .scope-video { display: block; width: 100%; height: auto; }
+.scope.is-recorded .cursor { display: none; }
+.scope.is-recorded .agent-log.no-anim .msg { animation: none; }
+@media (max-width: 760px) { .scope.is-recorded .agent { height: 380px; } }
 
 /* Email fallback (reel.js): the address with a copy button, when clicking an email link opened no mail app. */
 .mail-pop {
