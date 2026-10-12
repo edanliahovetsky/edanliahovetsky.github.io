@@ -50,7 +50,7 @@ function stepVideos(step) {
   for (const name of ["main", ...Object.keys(c.panels)]) {
     const el = document.createElement("video");
     el.muted = true; el.playsInline = true; el.setAttribute("playsinline", ""); el.setAttribute("muted", "");
-    el.disablePictureInPicture = true; el.preload = "auto";
+    el.disablePictureInPicture = true; el.preload = near ? "auto" : "none"; // the backdrop draws before anything loads
     const file = name === "main" ? `main-${t}` : t === "sd" ? `${name}-sd` : name;
     el.src = `assets/clips/${step}/${file}.mp4`;
     el.dataset.first = `assets/clips/${step}/${name}-first.webp`;
@@ -69,7 +69,7 @@ const buffered = (el) => el.readyState >= 4 || (el.readyState >= 2 && el.network
  */
 const warmed = new Set();
 function loadAround(i) {
-  stepVideos(BEATS[i]);
+  for (const el of all(stepVideos(BEATS[i]))) if (el.preload !== "auto") el.preload = "auto";
   const next = BEATS[i + 1];
   if (next && all(vids[BEATS[i]]).every(buffered) && !warmed.has(next)) {
     warmed.add(next);
@@ -408,7 +408,7 @@ function tick(now) {
     }
   }
   if (!all(stepVideos(cur)).every(buffered)) busy = true; // keep checking, to start the next step's download
-  loadAround(BEATS.indexOf(cur));
+  if (near) loadAround(BEATS.indexOf(cur)); // nothing downloads until the scene is about a screen away
   render(cur, stuck.has(cur) ? clipsInfo[cur].frames - 1 : stepVideos(cur).main.currentTime * clipsInfo[cur].fps);
   if (busy) raf = requestAnimationFrame(tick);
   else last = 0;
@@ -420,7 +420,7 @@ for (const b of steps) {
 
 // Entrance: the editor rises and tilts upright as the scene scrolls into view, instead of arriving as a flat image.
 // Exit: 0 → 1 as the stage scrolls away after the pin releases.
-let entry = 1, exit = 0;
+let entry = 1, exit = 0, near = false;
 const stepsEl = $("bl-steps");
 
 let scene = null;
@@ -429,7 +429,7 @@ scene = pinScene({
   render: (t) => { scrollT = t; kick(); },
   onEntry: (e) => { entry = e; kick(); },
   onExit: (x) => { exit = x; kick(); },
-  onNear: () => loadData.then(() => { loadAround(0); kick(); }),
+  onNear: () => loadData.then(() => { near = true; loadAround(0); kick(); }),
   onResize: () => { screen.fit(); panel.fit(); },
 });
 loadData.then(kick);
