@@ -176,13 +176,11 @@ function render(step, f) {
     // easing back out as it finishes.
     const r = T.probe(f) || { x: 950, y: 560 };
     const follow = smooth(m("play"), m("play") + sec(1.3), f) * (1 - smooth(m("end") - sec(0.5), m("end") + sec(0.5), f));
-    // Portrait shows a tall slice of the 16:9 frame: start on the left, where the route begins.
-    const x0 = portrait() ? 650 : 960;
-    const cam = { x: lerp(x0, r.x, follow * 0.8), y: lerp(540, r.y, follow * 0.8), zoom: lerp(1, 1.3, follow) };
+    const cam = { x: lerp(960, r.x, follow * 0.8), y: lerp(540, r.y, follow * 0.8), zoom: lerp(1, 1.3, follow) };
     const FIELD = [58, 110, 1815, 911], region = [0, 0, 1920, 1080].map((v, i) => lerp(v, FIELD[i], follow));
     Object.assign(scr, keyframes(p, [[0, { rx: 10, ry: 0, rz: -2, s: 0.94 }], [1, { rx: 14, ry: 10, rz: -2, s: 0.9 }]]));
-    sizeScreen(false);
-    if (portrait()) scr.ty = topOf(window.innerHeight, screen.el, scr.s);
+    if (portrait()) { scr.s = 1; scr.ty = ((TOP + wordEl.offsetTop - screen.el.offsetHeight) / 2 + screen.el.offsetHeight / 2 - window.innerHeight / 2) / window.innerHeight * 100; }
+    setWordWidth("");
     screen.draw(V.main, T, f, cam, undefined, true, region);
     word = ["Simulate.", "Sketch a route. Watch the robot drive it.", 1, "left"];
   } else if (step === "generate") {
@@ -217,10 +215,10 @@ function render(step, f) {
     const lesson = m("lesson"), into = smooth(lesson + sec(0.2), lesson + sec(0.9), f);
     const reg = c.panels.coach;
     setPanelRegion(reg);
-    const L = sideBySide("right", 0.84, 0.96, 1.6);
+    const L = sideBySide("right", 0.84, 0.96);
     Object.assign(scr, keyframes(p, [[0, { rx: 12, ry: 16, rz: -1, s: 0.82, dim: 0.15 }], [1, { rx: 8, ry: 12, rz: 0, s: 0.86, dim: 0.12 }]]), L.screen);
     scr.s *= L.fitK || 1;
-    const after = portrait() ? learnPortraitCam() : { x: 1140, y: 560, zoom: 1.27 };
+    const after = { x: 1140, y: 560, zoom: 1.27 };
     screen.draw(V.main, T, f, { x: lerp(960, after.x, into), y: lerp(540, after.y, into), zoom: lerp(1.4, after.zoom, into) });
     pnl = { a: into, ...keyframes(p, [[0, { rx: 4, ry: -14, s: 0.94 }], [1, { rx: 2, ry: -10, s: 0.98 }]]), ...L.panel };
     pnl.ty += (1 - into) * 6 - (portrait() ? 0 : 10);
@@ -264,36 +262,29 @@ function setStat(st) {
 /**
  * Places the tilted screen and the lifted panel side by side inside the stage, in pixels, so neither runs off
  * screen at any window size; when the pair is narrower than the window (wide and ultrawide screens) it is centered
- * with a fixed gap instead of pushed to the edges. On phones they stack: screen above, panel below.
+ * with a fixed gap instead of pushed to the edges. On phones the screen keeps the same 16:9 framing, nearly edge to
+ * edge under the step bar, and the panel is a smaller card under it on its side, with the caption beside it.
  */
 const portrait = () => window.innerWidth / window.innerHeight < 0.9;
 const TOP = 112; // below the site header and the step indicator
-/** Portrait: the space between the header and the word card, which the screen (and panel) share. */
-function portraitRoom() { return Math.max(240, word.offsetTop - 18 - TOP); }
-/** Portrait screens: the editor screen is a taller crop pinned near the top; with a panel it gives most of the room up. */
-function sizeScreen(hasPanel, minAspect = 0) {
-  const room = portraitRoom(), H = window.innerHeight;
-  // With a panel, the screen takes what the panel (at full width) leaves, but at least about a third of the room.
-  const left = (room - 14 - (gutterWidth() / Math.max(panelAspect, 0.7)) * 0.96) / 0.84;
-  let h = hasPanel ? Math.min(Math.max(room * 0.36, left), H * 0.5) : Math.min(room / 0.96, H * 0.75);
-  if (minAspect) h = Math.min(h, screen.el.offsetWidth / minAspect);
-  h = !portrait() ? "" : Math.round(h) + "px";
-  if (screen.el.style.height !== h) { screen.el.style.height = h; screen.fit(); }
-}
-function topOf(H, el, scale) { return ((TOP + (el.offsetHeight * scale) / 2 - H / 2) / H) * 100; }
-function sideBySide(panelSide, screenScale, panelScale, screenMinAspect = 0) {
-  sizeScreen(true, screenMinAspect);
+const wordEl = word;
+function setWordWidth(w) { if (wordEl.style.maxWidth !== w) wordEl.style.maxWidth = w; }
+function sideBySide(panelSide, screenScale, panelScale) {
   const W = window.innerWidth, H = window.innerHeight, sw = screen.el.offsetWidth, sh = screen.el.offsetHeight;
+  const dir = panelSide === "right" ? 1 : -1;
   if (portrait()) {
-    // Screen near the top, the lifted panel under it filling the rest, the word card keeps the bottom.
-    const room = portraitRoom(), ph = sizePanelPortrait((room - sh * screenScale - 14) / panelScale);
-    const top = TOP + Math.max(0, room - sh * screenScale - 14 - ph * panelScale) / 2; // a short pair sits mid-room
-    const mid = top + sh * screenScale + 14 + (ph * panelScale) / 2;
-    return { screen: { tx: 0, ty: topOf(H, screen.el, screenScale) + ((top - TOP) / H) * 100 }, panel: { tx: 0, ty: ((mid - H / 2) / H) * 100 } };
+    const g = clamp(W * 0.04, 16, 48), inner = W - 2 * g, gap = 14, top = TOP + sh + gap;
+    const pw = sizePanelPortrait(inner * 0.52, H - Math.max(24, H * 0.05) - top), ph = panel.el.offsetHeight;
+    setWordWidth(Math.floor(inner - pw - gap) + "px");
+    return {
+      screen: { tx: 0, ty: ((TOP + sh / 2 - H / 2) / H) * 100, s: 1 },
+      panel: { tx: ((dir * (inner - pw) / 2) / W) * 100, ty: ((top + ph / 2 - H / 2) / H) * 100, s: 1 },
+    };
   }
+  setWordWidth("");
   sizePanelPortrait(0);
   const pw = panel.el.offsetWidth;
-  const m = Math.max(24, W * 0.035), dir = panelSide === "right" ? 1 : -1;
+  const m = Math.max(24, W * 0.035);
   const gap = clamp(W * 0.03, 24, 64), fitK = clamp((W - 2 * m - gap - pw * panelScale) / (sw * screenScale), 0.5, 1);
   screenScale *= fitK;
   const pair = sw * screenScale + gap + pw * panelScale, half = Math.min(pair, W - 2 * m) / 2;
@@ -302,29 +293,18 @@ function sideBySide(panelSide, screenScale, panelScale, screenMinAspect = 0) {
   return { screen: { tx: (-dir * Math.max(0, sc) / W) * 100, ty: 0 }, panel: { tx: ((dir * pc) / W) * 100, ty: 0 }, fitK };
 }
 /**
- * Portrait: the panel takes the full width it can within maxH. Very tall panels (the lesson list) are shown no
- * narrower than 0.7:1 and cropped from the top, so their text stays readable on a phone. 0 clears it (landscape).
+ * Portrait: the panel at up to maxW wide within maxH. Very tall panels are shown no narrower than 0.7:1, cropped from
+ * the bottom. Returns its width; 0 clears it (landscape).
  */
-function sizePanelPortrait(maxH) {
+function sizePanelPortrait(maxW, maxH = 0) {
   let w = "", h = "";
-  if (maxH > 0) {
-    const aspect = Math.max(panelAspect, 0.7), maxW = gutterWidth();
-    const pw = Math.min(maxW, maxH * aspect);
+  if (maxW > 0) {
+    const aspect = Math.max(panelAspect, 0.7), pw = Math.min(maxW, maxH * aspect);
     w = Math.round(pw) + "px"; h = Math.round(pw / aspect) + "px";
   }
   if (panel.el.style.width !== w || panel.el.style.height !== h) { panel.el.style.width = w; panel.el.style.height = h; panel.fit(); }
-  return panel.el.offsetHeight;
+  return panel.el.offsetWidth;
 }
-/**
- * Portrait Learn: a wide strip that holds the "0.70 m handoff" label and the Bend circle whole, while leaving out the
- * coach card in the frame's top-left corner (that card is the lifted panel).
- */
-function learnPortraitCam() {
-  const [x, y, w, h] = [350, 291, 1040, 650], base = Math.max(screen.W / 1920, screen.H / 1080);
-  return { x: x + w / 2, y: y + h / 2, zoom: Math.max(1, screen.W / base / w, screen.H / base / h) };
-}
-/** The page width inside the gutters. */
-const gutterWidth = () => window.innerWidth - 2 * clamp(window.innerWidth * 0.04, 16, 48);
 let panelKey = "", panelAspect = 1;
 function setPanelRegion(reg) {
   const key = reg.join(",");
