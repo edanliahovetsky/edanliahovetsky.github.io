@@ -41,9 +41,9 @@ poster "$OUT/flat7-band.mp4" "$OUT/flat7-band.jpg" 2
 photo() { sips -s format jpeg -s formatOptions 68 -Z "${3:-1600}" "$1" --out "$2" >/dev/null; }
 photo ~/Documents/Resume/Edan_Profile_Handoff/photo/headshot_1600.png "assets/img/edan-square.jpg" 1200
 photo "$SRC/nasa/nasa-grc-2025-c-05566.jpg"   "$OUT/nasa-rover-test.jpg"
-photo "$SRC/nasa/sign-portrait.jpg"           "$OUT/nasa-sign.jpg" 1200
-# Lift the shadows and midtones (Edan, the foreground) without touching the bright sign: the curve adds nothing at white.
-python3 -c 'import sys; from PIL import Image; im = Image.open(sys.argv[1]).convert("RGB"); im.point([round(255 * min(1, (x := i / 255) + 0.4 * x * (1 - x) ** 2)) for i in range(256)] * 3).save(sys.argv[1], quality=86)' "$OUT/nasa-sign.jpg"
+# Closing ceremony (Oct 12 2026, Edan: in place of the photo at the Glenn sign): a 3:4 crop (x 420, y 70, 765x1020) of
+# a video still Edan sent (award-handshake-frame.webp).
+sips -s format jpeg -s formatOptions 86 "$SRC/nasa/award-handshake.jpg" --out "$OUT/nasa-handshake.jpg" >/dev/null
 photo "$SRC/nasa/anechoic-dome.jpg"           "$OUT/nasa-anechoic-dome.jpg"
 photo "$SRC/nasa/acoustic-liner-engineer.jpg" "$OUT/nasa-acoustic-liner.jpg"
 photo "$SRC/nasa/benefit-of-all-night.jpg"    "$OUT/nasa-benefit-of-all.jpg"
