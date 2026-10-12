@@ -45,7 +45,8 @@ export class Timeline {
 
 /**
  * Pins `stage` for the length of the timeline and calls render(t) as you scroll. `scrub` is how many seconds the
- * scene takes to catch up with the scrollbar, so a trackpad stop glides to a halt instead of snapping.
+ * scene takes to catch up with the scrollbar, so a trackpad stop glides to a halt instead of snapping. unitVh (a number,
+ * or a function re-read on each re-measure) is how much scroll, in % of the window height, one unit of t takes.
  * onNear fires once when the scene is about two screens away (start loading media then).
  */
 export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, onEntry, onExit, scrub = 0.3 }) {
@@ -70,7 +71,7 @@ export function pinScene({ el, stage, total, unitVh, render, onNear, onResize, o
     t: total, ease: "none",
     scrollTrigger: {
       trigger: el, start: "top top", pin: stage, anticipatePin: 1, invalidateOnRefresh: true,
-      end: () => "+=" + Math.round(total * unitVh / 100 * window.innerHeight),
+      end: () => "+=" + Math.round(total * (typeof unitVh === "function" ? unitVh() : unitVh) / 100 * window.innerHeight),
       scrub,
     },
     onUpdate: () => { t = proxy.t; draw(); },

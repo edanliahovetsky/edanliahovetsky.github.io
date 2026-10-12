@@ -9,11 +9,14 @@ import { clamp, lerp, smooth, easeOut, keyframes, Timeline, pinScene } from "./s
 
 const $ = (id) => document.getElementById(id);
 const root = $("bline-scene");
+const stage = root.querySelector(".scene-stage");
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // ================================================================== the pinned editor sequence
 const TL = new Timeline([["simulate", 1], ["generate", 1], ["organize", 1], ["learn", 1]]);
-const UNIT_VH = 130; // each step gets an equal stretch of scroll, about 1.3 screens, so no step is easy to scroll past
+// Each step gets an equal stretch of scroll, about 1.3 screens (2 on phones, where a flick travels much further), so
+// no step is easy to scroll past.
+const UNIT_VH = () => (window.innerWidth / window.innerHeight < 0.9 ? 200 : 130);
 const TILT = 0.6; // the film's camera angles, softened
 
 // ================================================================== editor clips (real UI, 30 fps video)
@@ -158,7 +161,9 @@ function frame3d(el, v, visible) {
   el.style.opacity = visible;
   el.style.visibility = visible > 0.005 ? "visible" : "hidden";
   if (visible <= 0.005) return;
-  el.style.transform = `translate(-50%, -50%) translate(${v.tx || 0}vw, ${v.ty || 0}vh) perspective(2400px) rotateX(${(v.rx || 0) * TILT}deg) rotateY(${(v.ry || 0) * TILT}deg) rotateZ(${(v.rz || 0) * TILT}deg) scale(${v.s || 1})`;
+  // tx/ty move it in viewport units; px/py in pixels from the stage's center (phones, where the stage is shorter than
+  // the window while Safari's toolbars are hidden).
+  el.style.transform = `translate(-50%, -50%) translate(${v.tx || 0}vw, ${v.ty || 0}vh) translate(${v.px || 0}px, ${v.py || 0}px) perspective(2400px) rotateX(${(v.rx || 0) * TILT}deg) rotateY(${(v.ry || 0) * TILT}deg) rotateZ(${(v.rz || 0) * TILT}deg) scale(${v.s || 1})`;
   const dim = el.querySelector(".bl-dim");
   if (dim) dim.style.opacity = v.dim || 0;
 }
@@ -179,8 +184,8 @@ function render(step, f) {
     const cam = { x: lerp(960, r.x, follow * 0.8), y: lerp(540, r.y, follow * 0.8), zoom: lerp(1, 1.3, follow) };
     const FIELD = [58, 110, 1815, 911], region = [0, 0, 1920, 1080].map((v, i) => lerp(v, FIELD[i], follow));
     Object.assign(scr, keyframes(p, [[0, { rx: 10, ry: 0, rz: -2, s: 0.94 }], [1, { rx: 14, ry: 10, rz: -2, s: 0.9 }]]));
-    if (portrait()) { scr.s = 1; scr.ty = ((TOP + wordEl.offsetTop - screen.el.offsetHeight) / 2 + screen.el.offsetHeight / 2 - window.innerHeight / 2) / window.innerHeight * 100; }
-    setWordWidth("");
+    if (portrait()) { const P = portraitLayout(); scr.s = 1; scr.py = P.screenY; placeWord(P.rowTop, ""); }
+    else placeWord(null);
     screen.draw(V.main, T, f, cam, undefined, true, region);
     word = ["Simulate.", "Sketch a route. Watch the robot drive it.", 1, "left"];
   } else if (step === "generate") {
@@ -268,20 +273,37 @@ function setStat(st) {
 const portrait = () => window.innerWidth / window.innerHeight < 0.9;
 const TOP = 112; // below the site header and the step indicator
 const wordEl = word;
-function setWordWidth(w) { if (wordEl.style.maxWidth !== w) wordEl.style.maxWidth = w; }
+/**
+ * Phones: the screen, then a row with the panel on its side and the caption beside it. The row is as tall as the
+ * tallest panel, so the screen and the caption's first line sit in the same place on every step, and the whole group
+ * is centered in the stage under the step bar. Positions are pixels from the stage's center.
+ */
+function portraitLayout() {
+  const W = window.innerWidth, S = stage.clientHeight, g = clamp(W * 0.04, 16, 48), inner = W - 2 * g, gap = 18;
+  const sh = screen.el.offsetHeight, pad = Math.max(24, S * 0.04), avail = S - TOP - pad;
+  const rowH = Math.max(140, Math.min((inner * 0.52) / 0.82, avail - sh - gap));
+  const top = TOP + Math.max(0, avail - (sh + gap + rowH)) * 0.45;
+  return { S, g, inner, gap, rowH, screenY: top + sh / 2 - S / 2, rowTop: top + sh + gap };
+}
+/** The caption's top and width on phones; null puts it back at the bottom (landscape). */
+function placeWord(top, maxWidth = "") {
+  const t = top == null ? "" : Math.round(top) + "px";
+  if (wordEl.style.top !== t) { wordEl.style.top = t; wordEl.style.bottom = t ? "auto" : ""; }
+  if (wordEl.style.maxWidth !== maxWidth) wordEl.style.maxWidth = maxWidth;
+}
 function sideBySide(panelSide, screenScale, panelScale) {
-  const W = window.innerWidth, H = window.innerHeight, sw = screen.el.offsetWidth, sh = screen.el.offsetHeight;
+  const W = window.innerWidth, sw = screen.el.offsetWidth;
   const dir = panelSide === "right" ? 1 : -1;
   if (portrait()) {
-    const g = clamp(W * 0.04, 16, 48), inner = W - 2 * g, gap = 14, top = TOP + sh + gap;
-    const pw = sizePanelPortrait(inner * 0.52, H - Math.max(24, H * 0.05) - top), ph = panel.el.offsetHeight;
-    setWordWidth(Math.floor(inner - pw - gap) + "px");
+    const P = portraitLayout();
+    const pw = sizePanelPortrait(P.inner * 0.52, P.rowH), ph = panel.el.offsetHeight;
+    placeWord(P.rowTop, Math.floor(P.inner - pw - P.gap) + "px");
     return {
-      screen: { tx: 0, ty: ((TOP + sh / 2 - H / 2) / H) * 100, s: 1 },
-      panel: { tx: ((dir * (inner - pw) / 2) / W) * 100, ty: ((top + ph / 2 - H / 2) / H) * 100, s: 1 },
+      screen: { tx: 0, ty: 0, py: P.screenY, s: 1 },
+      panel: { tx: 0, ty: 0, px: dir * (P.inner - pw) / 2, py: P.rowTop + ph / 2 - P.S / 2, s: 1 },
     };
   }
-  setWordWidth("");
+  placeWord(null);
   sizePanelPortrait(0);
   const pw = panel.el.offsetWidth;
   const m = Math.max(24, W * 0.035);
@@ -407,7 +429,7 @@ const stepsEl = $("bl-steps");
 
 let scene = null;
 scene = pinScene({
-  el: root, stage: root.querySelector(".scene-stage"), total: TL.total, unitVh: UNIT_VH, scrub: true,
+  el: root, stage, total: TL.total, unitVh: UNIT_VH, scrub: true,
   render: (t) => { scrollT = t; kick(); },
   onEntry: (e) => { entry = e; kick(); },
   onExit: (x) => { exit = x; kick(); },
