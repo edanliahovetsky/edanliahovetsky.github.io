@@ -83,6 +83,8 @@ function release(step) {
 }
 /** Steps whose video couldn't play (iPhone Low Power Mode blocks it, or it never arrived): they show their result. */
 const stuck = new Set();
+// A tap gives permission to play: try the step again (reel.js fires this on the first touch).
+document.addEventListener("media-unlocked", () => { if (stuck.size) { stuck.clear(); kick(); } });
 /** Which still a screen shows for this video: "last" for a step that can't play, "first" until a frame arrives. */
 function stillFor(video) {
   if (stuck.has(cur)) return "last";

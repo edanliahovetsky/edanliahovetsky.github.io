@@ -40,6 +40,9 @@ body {
   overflow-x: hidden;
 }
 img, video, svg { display: block; max-width: 100%; }
+/* Safari's big play button appears when it refuses to autoplay; the poster shows instead (a tap starts playback). */
+video::-webkit-media-controls-start-playback-button { display: none !important; -webkit-appearance: none; }
+video::-webkit-media-controls { display: none !important; }
 a { color: inherit; text-decoration: none; }
 p { margin: 0; }
 h1, h2, h3 { margin: 0; font-weight: 700; }

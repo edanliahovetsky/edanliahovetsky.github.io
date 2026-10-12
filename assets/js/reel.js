@@ -6,7 +6,21 @@
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var io = "IntersectionObserver" in window;
-  var play = function (v) { if (reduceMotion) return; var p = v.play(); if (p && p.catch) p.catch(function () {}); };
+  // iPhones refuse to autoplay in Low Power Mode (or with autoplay turned off): the video keeps its poster, and the
+  // first tap anywhere on the page (which counts as permission) starts whatever is on screen.
+  var refused = [];
+  var play = function (v) {
+    if (reduceMotion) return;
+    var p = v.play();
+    if (p && p.catch) p.catch(function (e) { if (e && e.name === "NotAllowedError" && refused.indexOf(v) < 0) refused.push(v); });
+  };
+  var retry = function () {
+    var list = refused.splice(0);
+    list.forEach(function (v) { var r = v.getBoundingClientRect(); if (r.bottom > 0 && r.top < innerHeight) play(v); else refused.push(v); });
+    document.dispatchEvent(new Event("media-unlocked"));
+  };
+  document.addEventListener("touchend", retry, { passive: true });
+  document.addEventListener("click", retry);
 
   // ---- Device class: which size of video to send ----
   // sd: phones, small windows, data-saver, slow connections, or devices reporting little memory.
