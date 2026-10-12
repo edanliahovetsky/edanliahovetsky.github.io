@@ -675,6 +675,8 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .nasa-grid figure { position: relative; margin: 0; }
 .nasa-grid img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--radius); }
 .nasa-grid figure + figure img { aspect-ratio: 4 / 3; }
+/* Phones: photo labels stay on one line (a wrapped pill covers too much of the photo). */
+@media (max-width: 760px) { .hero-photo figcaption, .credit { left: 10px; bottom: 10px; padding: 5px 10px; font-size: 10px; white-space: nowrap; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; } }
 /* Phones: the two photos are small, so their labels shrink and stay on one line. */
 @media (max-width: 760px) { .nasa-grid .credit { left: 6px; bottom: 6px; padding: 3px 7px; font-size: 9.5px; letter-spacing: 0; white-space: nowrap; max-width: calc(100% - 12px); overflow: hidden; text-overflow: ellipsis; } }
 .nasa-copy {

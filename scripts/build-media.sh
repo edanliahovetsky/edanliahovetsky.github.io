@@ -40,9 +40,13 @@ poster "$OUT/flat7-band.mp4" "$OUT/flat7-band.jpg" 2
 # --- Photos: long edge 1600 px.
 photo() { sips -s format jpeg -s formatOptions 68 -Z "${3:-1600}" "$1" --out "$2" >/dev/null; }
 photo ~/Documents/Resume/Edan_Profile_Handoff/photo/headshot_1600.png "assets/img/edan-square.jpg" 1200
-photo "$SRC/nasa/nasa-grc-2025-c-05566.jpg"   "$OUT/nasa-rover-test.jpg"
-# Closing ceremony (Oct 12 2026, Edan: in place of the photo at the Glenn sign): a 3:4 crop (x 420, y 70, 765x1020) of
-# a video still Edan sent (award-handshake-frame.webp).
+# The shirt logo is inpainted out (Edan, Oct 12 2026): nasa-grc-2025-c-05566-nologo.jpg is the original with the
+# logo at about (2178-2234, 826-862) filled in by OpenCV inpainting.
+photo "$SRC/nasa/nasa-grc-2025-c-05566-nologo.jpg" "$OUT/nasa-rover-test.jpg"
+# Closing ceremony (Oct 12 2026, Edan: in place of the photo at the Glenn sign): a 3:4 crop of a video still Edan sent
+# (award-handshake-frame.webp). The still ends just below everyone's feet, so the bare floor under them (rows 1032-1111)
+# is mirrored below the frame, softened and slightly darkened, and the crop (x 427, y 190, 750x1000) puts the feet clear
+# of the photo's label. award-handshake.jpg is that result.
 sips -s format jpeg -s formatOptions 86 "$SRC/nasa/award-handshake.jpg" --out "$OUT/nasa-handshake.jpg" >/dev/null
 photo "$SRC/nasa/anechoic-dome.jpg"           "$OUT/nasa-anechoic-dome.jpg"
 photo "$SRC/nasa/acoustic-liner-engineer.jpg" "$OUT/nasa-acoustic-liner.jpg"
