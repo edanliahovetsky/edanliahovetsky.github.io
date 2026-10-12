@@ -74,7 +74,7 @@ def main(names):
         # decode it easily), sd for phones. Panels: full-resolution crops, and half-size ones for phones.
         encode(frames, d / "main-xl.mp4", "scale=2560:1440:flags=lanczos", 22, fps)
         encode(frames, d / "main-hd.mp4", "scale=1920:1080:flags=lanczos", 22, fps)
-        encode(frames, d / "main-sd.mp4", "scale=1280:720:flags=lanczos", 23, fps)
+        encode(frames, d / "main-sd.mp4", "scale=1280:720:flags=lanczos", 26, fps)
         # Stills of the first and last frame: shown while a clip loads, and instead of it where video can't play.
         for tag, f in (("first", frames[0]), ("last", frames[-1])):
             still(f, d / f"main-{tag}.webp", "scale=1280:-2")
