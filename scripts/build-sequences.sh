@@ -31,8 +31,9 @@ ffmpeg -v error -y -ss 1 -i assets/media/bline-open.mp4 -frames:v 1 -vf scale=12
 # Team montage: one 1.6 s cut per team from the launch film's verified match masters, as one looping clip
 # (order must match CUTS in bline.js; the page labels each cut from the clip's currentTime).
 args=(); filt=""; i=0
-for c in "2638-rocket-m8@172.9" "6989-ankara-f3@69" "4522-johnson-q49@13" "1710-hopper-q36@69.5" \
-         "3476-socal-m1@68" "4655-northstar-f2@135" "4915-milstein-f2@171.8" "4915-einstein-3@6"; do
+for c in "4522-johnson-q49@13" "1987-curie-q118@69.5" "1710-hopper-q36@69.5" "4089-milstein-m10@165" \
+         "6989-ankara-f3@69" "3476-socal-m1@68" "2811-pncmp-f2@138" "4362-troy-f1@16" \
+         "4655-northstar-f2@135" "4915-milstein-f2@171.8" "4915-einstein-3@6"; do
   args+=(-t 1.6 -i "$MASTERS/$c.mp4"); filt+="[$i:v]fps=30,scale=1920:1080,setsar=1[v$i];"; i=$((i+1))
 done
 for j in $(seq 0 $((i-1))); do filt+="[v$j]"; done
