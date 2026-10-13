@@ -446,12 +446,22 @@ const CUTS = [
 ];
 const teams = $("bl-teams"), teamLabel = $("bl-team-label");
 let cutShown = -1;
-teams.addEventListener("timeupdate", () => {
-  const k = clamp(Math.floor(teams.currentTime / 1.6), 0, CUTS.length - 1);
+function showCut(t) {
+  const k = clamp(Math.floor(t / 1.6 + 1e-3), 0, CUTS.length - 1);
   if (k === cutShown) return;
   cutShown = k;
   teamLabel.innerHTML = `<b>Team ${CUTS[k][0]}</b><span>${CUTS[k][1]} · ${CUTS[k][2]}</span>`;
-});
+}
+// The label changes with the cut on screen: per presented frame where the browser can say so (timeupdate alone only
+// fires about every quarter second, so the label lagged the cut), otherwise every animation frame while it plays.
+if ("requestVideoFrameCallback" in HTMLVideoElement.prototype) {
+  const onFrame = (now, frame) => { showCut(frame.mediaTime); teams.requestVideoFrameCallback(onFrame); };
+  teams.requestVideoFrameCallback(onFrame);
+} else {
+  const tickCut = () => { showCut(teams.currentTime); if (!teams.paused) requestAnimationFrame(tickCut); };
+  teams.addEventListener("play", () => requestAnimationFrame(tickCut));
+}
+teams.addEventListener("seeked", () => showCut(teams.currentTime));
 
 // ================================================================== banner wall
 // 2026 blue banners won while running BLine (the launch film's bannerData.ts, rechecked Oct 13 2026: each was won after
