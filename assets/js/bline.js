@@ -442,10 +442,7 @@ loadData.then(kick);
 const CUTS = [
   ["4522", "Johnson Division", "World Championship"], ["1987", "Curie Division", "World Championship"],
   ["1710", "Hopper Division", "World Championship"], ["4089", "Milstein Division", "World Championship"],
-  ["6989", "Ankara Regional", "Türkiye"], ["3476", "SoCal State Championship", "California"],
-  ["2811", "PNW District Championship", "Washington"], ["4362", "FIM District Troy", "Michigan"],
-  ["4655", "North Star Regional", "Minnesota"], ["4915", "Milstein Division", "World Championship"],
-  ["4915", "Einstein", "World Championship"],
+  ["4915", "Milstein Division", "World Championship"], ["4915", "Einstein", "World Championship"],
 ];
 const teams = $("bl-teams"), teamLabel = $("bl-team-label");
 let cutShown = -1;
