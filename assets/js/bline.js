@@ -441,7 +441,7 @@ loadData.then(kick);
 // ================================================================== team montage labels
 const CUTS = [
   ["2638", "Rocket City Regional", "my team"], ["6989", "Ankara Regional", "Türkiye"],
-  ["4522", "Johnson Division", "World Championship"], ["1792", "Johnson Division", "World Championship"],
+  ["4522", "Johnson Division", "World Championship"], ["1710", "Hopper Division", "World Championship"],
   ["3476", "SoCal State Championship", "California"], ["4655", "North Star Regional", "Minnesota"],
   ["4915", "Milstein Division", "World Championship"], ["4915", "Einstein", "World Championship"],
 ];
@@ -455,13 +455,14 @@ teams.addEventListener("timeupdate", () => {
 });
 
 // ================================================================== banner wall
-// 2026 blue banners won while running BLine (the launch film's bannerData.ts; each checked against the team's
-// code history or own post). Laid out on the film's two rafters (9 above, 10 below); they drop in the film's order
-// and timing (fast slams 4 frames apart, then the five heroes, 3476's three together), once, in real time.
+// 2026 blue banners won while running BLine (the launch film's bannerData.ts, rechecked Oct 13 2026: each was won after
+// the team's code added BLine, or for 6989 after their Chief Delphi post that they had run it). Laid out on the film's
+// two rafters (8 above, 9 below); they drop in the film's order and timing (fast slams 4 frames apart, then the five
+// heroes, 3476's three together), once, in real time.
 const FAST = [
   ["238", "NE District UNH", "Winner"], ["449", "Bethesda", "Engineering Inspiration"], ["4362", "FIM District Troy", "Winner"],
   ["4451", "FSC District Richland", "Winner"], ["4655", "Minnesota North Star", "Winner"], ["6989", "Ankara Regional", "Impact Award"],
-  ["1792", "Seven Rivers", "Winner"], ["1165", "Las Vegas Regional", "Winner"], ["4451", "FSC District Richland", "Engineering Inspiration"],
+  ["4451", "FSC District Richland", "Engineering Inspiration"],
   ["2586", "Michigan State Champs · Consumers Div.", "Winner"], ["1710", "Greater Kansas City", "Impact Award"], ["6989", "Ankara Regional", "Winner"],
 ];
 const HEROES = [
@@ -471,10 +472,10 @@ const HEROES = [
   [["4915", "Milstein Division", "Winner"]],
 ];
 const SLOT = (row, col) => ({ row, col });
-const HERO_SLOTS = [[SLOT(0, 1)], [SLOT(1, 8)], [SLOT(0, 7)], [SLOT(1, 3), SLOT(1, 4), SLOT(1, 5)], [SLOT(0, 4)]];
+const HERO_SLOTS = [[SLOT(0, 1)], [SLOT(1, 7)], [SLOT(0, 6)], [SLOT(1, 3), SLOT(1, 4), SLOT(1, 5)], [SLOT(0, 4)]];
 const taken = new Set(HERO_SLOTS.flat().map((s) => s.row + "," + s.col));
-const FAST_SLOTS = [...Array.from({ length: 9 }, (_, c) => SLOT(0, c)), ...Array.from({ length: 10 }, (_, c) => SLOT(1, c))]
-  .filter((s) => !taken.has(s.row + "," + s.col)).sort((a, b) => (a.col - (a.row ? 4.5 : 4)) - (b.col - (b.row ? 4.5 : 4)) || a.row - b.row);
+const FAST_SLOTS = [...Array.from({ length: 8 }, (_, c) => SLOT(0, c)), ...Array.from({ length: 9 }, (_, c) => SLOT(1, c))]
+  .filter((s) => !taken.has(s.row + "," + s.col)).sort((a, b) => (a.col + (a.row ? 0.5 : 1)) - (b.col + (b.row ? 0.5 : 1)) || a.row - b.row); // left to right
 const DROPS = [
   ...FAST.map((d, i) => ({ d, at: 4 * (i + 1), slot: FAST_SLOTS[i], heavy: false })),
   ...HEROES.flatMap((g, gi) => g.map((d, k) => ({ d, at: gi === 3 ? 120 + k * 8 : [48, 72, 96, 0, 152][gi] + 6, slot: HERO_SLOTS[gi][k], heavy: true }))),
@@ -498,8 +499,9 @@ for (const p of DROPS) {
   const [team, event, award] = p.d, ev = "2026 " + event;
   const el = document.createElement("div");
   el.className = "bnr" + (p.heavy ? " hero" : "");
-  // Slots in percent of the wall: 10 columns, the top row offset by half a column (the film's rafters).
-  el.style.left = ((p.slot.col + (p.slot.row ? 0 : 0.5)) * 10 + 0.8) + "%";
+  // Slots in percent of the wall: 10 columns; the top row's 8 start a column in, the bottom row's 9 half a column in, so
+  // both rows are centered (the film's rafters).
+  el.style.left = ((p.slot.col + (p.slot.row ? 0.5 : 1)) * 10 + 0.8) + "%";
   el.style.top = (p.slot.row ? 53 : 0) + "%";
   el.innerHTML = `<div class="bnr-team">${team}</div><div class="bnr-award${award.length > 14 ? " long" : ""}">${award}</div><div class="bnr-event${ev.length > 30 ? " long" : ""}">${ev}</div>`;
   wall.appendChild(el);
