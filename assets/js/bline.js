@@ -440,9 +440,10 @@ loadData.then(kick);
 
 // ================================================================== team montage labels
 const CUTS = [
-  ["4522", "Johnson Division", "World Championship"], ["1987", "Curie Division", "World Championship"],
+  ["4522", "Johnson Division", "World Championship"], ["3476", "Archimedes Division", "World Championship"],
+  ["1987", "Curie Division", "World Championship"], ["971", "Archimedes Division", "World Championship"],
   ["1710", "Hopper Division", "World Championship"], ["4089", "Milstein Division", "World Championship"],
-  ["4915", "Milstein Division", "World Championship"], ["4915", "Einstein", "World Championship"],
+  ["4915", "Einstein", "World Championship"],
 ];
 const teams = $("bl-teams"), teamLabel = $("bl-team-label");
 let cutShown = -1;
