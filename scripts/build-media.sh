@@ -39,7 +39,8 @@ poster "$OUT/flat7-band.mp4" "$OUT/flat7-band.jpg" 2
 
 # --- Photos: long edge 1600 px.
 photo() { sips -s format jpeg -s formatOptions 68 -Z "${3:-1600}" "$1" --out "$2" >/dev/null; }
-photo ~/Documents/Resume/Edan_Profile_Handoff/photo/headshot_1600.png "assets/img/edan-square.jpg" 1200
+# The portrait (assets/img/edan-square.jpg) is the retouched senior photo (Nov 2026), set directly at 1200 px,
+# not rebuilt here. The old headshot_1600.png line was removed so a rebuild does not bring the old photo back.
 # The shirt logo is inpainted out (Edan, Oct 12 2026): nasa-grc-2025-c-05566-nologo.jpg is the original with the
 # logo at about (2178-2234, 826-862) filled in by OpenCV inpainting.
 photo "$SRC/nasa/nasa-grc-2025-c-05566-nologo.jpg" "$OUT/nasa-rover-test.jpg"
